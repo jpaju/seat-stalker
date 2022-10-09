@@ -1,4 +1,5 @@
 package fi.jpaju
+package util
 
 import zio.*
 import zio.prelude.*
