@@ -1,11 +1,9 @@
 package fi.jpaju
 
 import sttp.client3.*
-import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import sttp.client3.testing.*
 import sttp.model.*
 import zio.*
-import zio.test.Assertion.*
 import zio.test.*
 
 import java.time.*
@@ -13,47 +11,40 @@ import java.time.*
 object TableOnlineServiceSpec extends ZIOSpecDefault:
   override def spec = suite("TableOnlineServiceSpec")(
     test("make request with correct url and parameters") {
-      val parameters = CheckSeatsParameters(
-        RestaurantId("1312"),
-        LocalDate.parse("2021-03-01"),
-        SeatCount(5)
-      )
-
-      val recordingBackend = new RecordingSttpBackend(
-        AsyncHttpClientZioBackend.stub.whenAnyRequest
-          .thenRespond(noPeriodsJson)
-      )
-
-      def assertCorrectRequest(request: Request[?, ?]): TestResult =
-        val uri                                      = request.uri
-        val expectedQueryParams: Map[String, String] = Map(
-          "persons" -> parameters.seats.toString,
-          "date"    -> parameters.from.toString
+      check(Gens.checkSeatParameters) { (parameters) =>
+        val recordingBackend = new RecordingSttpBackend(
+          AsyncHttpClientZioBackend.stub.whenAnyRequest
+            .thenRespond(noPeriodsJson)
         )
 
-        assert(uri.host)(equalTo(Some("service.tableonline.fi"))) &&
-        assert(uri.path)(equalTo(List("public", "r", parameters.restaurantId, "periods"))) &&
-        assert(uri.paramsMap)(equalTo(expectedQueryParams))
-      end assertCorrectRequest
+        def assertCorrectRequest(request: Request[?, ?]): TestResult =
+          val uri                                      = request.uri
+          val expectedQueryParams: Map[String, String] = Map(
+            "persons" -> parameters.seats.toString,
+            "date"    -> parameters.from.toString
+          )
 
-      withTableOnlineService(recordingBackend) {
-        for
-          service <- ZIO.service[AvailableSeatsService]
-          _       <- service.checkAvailableSeats(parameters)
-          request  = recordingBackend.allInteractions.head._1
-        yield assertCorrectRequest(request)
+          assert(uri.host)(equalTo(Some("service.tableonline.fi"))) &&
+          assert(uri.path)(equalTo(List("public", "r", parameters.restaurantId, "periods"))) &&
+          assert(uri.paramsMap)(equalTo(expectedQueryParams))
+        end assertCorrectRequest
+
+        withTableOnlineService(recordingBackend) { service =>
+          for
+            _      <- service.checkAvailableSeats(parameters)
+            request = recordingBackend.allInteractions.head._1
+          yield assertCorrectRequest(request)
+        }
       }
     },
     test("when next_available_date is null, then returns Seats.NotAvailable") {
       val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest
         .thenRespond(noPeriodsJson)
 
-      withTableOnlineService(sttpBackendStub) {
+      withTableOnlineService(sttpBackendStub) { service =>
         val parameters = defaultParameters
 
-        for
-          service <- ZIO.service[AvailableSeatsService]
-          result  <- service.checkAvailableSeats(parameters)
+        for result <- service.checkAvailableSeats(parameters)
         yield assertTrue(result == Seats.NotAvailable)
       }
     },
@@ -67,7 +58,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       val responseJson    = periodsJson(responseData)
       val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest.thenRespond(responseJson)
 
-      withTableOnlineService(sttpBackendStub) {
+      withTableOnlineService(sttpBackendStub) { service =>
         val parameters     = defaultParameters
         val expectedResult = Seats.Available(
           responseData.map { (seatCount, time) =>
@@ -75,9 +66,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
           }
         )
 
-        for
-          service <- ZIO.service[AvailableSeatsService]
-          result  <- service.checkAvailableSeats(parameters)
+        for result <- service.checkAvailableSeats(parameters)
         yield assertTrue(result == expectedResult)
       }
     }
@@ -86,9 +75,11 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
   // =============================================== Helpers ===============================================
 
   private def withTableOnlineService[R, E, A](sttpBackend: SttpBackend[Task, Any])(
-      test: ZIO[R & AvailableSeatsService & SttpBackend[Task, Any], E, A]
+      f: AvailableSeatsService => ZIO[R & AvailableSeatsService & SttpBackend[Task, Any], E, A]
   ): ZIO[R, E, A] =
-    test.provideSome[R](TableOnlineSeatsService.layer, ZLayer.succeed(sttpBackend))
+    ZIO
+      .serviceWithZIO[AvailableSeatsService](f)
+      .provideSome[R](TableOnlineSeatsService.layer, ZLayer.succeed(sttpBackend))
 
   private def defaultParameters: CheckSeatsParameters =
     CheckSeatsParameters(

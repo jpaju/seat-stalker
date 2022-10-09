@@ -2,14 +2,19 @@ package fi.jpaju
 
 import zio.*
 import zio.prelude.*
+import zio.prelude.Assertion.*
 
 import java.time.*
 
-object SeatCount extends Subtype[Int]
 type SeatCount = SeatCount.Type
+object SeatCount    extends Subtype[Int]:
+  override inline def assertion =
+    greaterThan(0)
 
-object RestaurantId extends Subtype[String]
 type RestaurantId = RestaurantId.Type
+object RestaurantId extends Subtype[String]:
+  override inline def assertion =
+    hasLength(greaterThan(0))
 
 case class AvailableSeat(time: LocalDateTime, seats: SeatCount)
 

@@ -4,6 +4,7 @@ import sttp.client3.*
 import sttp.client3.ziojson.*
 import zio.*
 import zio.json.*
+import zio.prelude.*
 
 import java.time.*
 
@@ -32,17 +33,22 @@ case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends 
 
     response.map { response =>
       if response.isEmpty then Seats.NotAvailable
-      else Seats.Available(response.toAvailableSeats(parameters.from))
+      else
+        Seats.Available(
+          response
+            .toAvailableSeats(parameters.from)
+            .collect { case Validation.Success(_, seats) => seats }
+        )
     }
 
 object TableOnlineSeatsService:
   private case class PeriodsResponse(periods: List[Period], nextAvailableDate: Option[LocalDate]):
     def isEmpty: Boolean = periods.isEmpty
 
-    def toAvailableSeats(requestDate: LocalDate): List[AvailableSeat] =
+    def toAvailableSeats(requestDate: LocalDate): List[Validation[String, AvailableSeat]] =
       periods.flatMap { period =>
         period.hours.map { hour =>
-          AvailableSeat(hour.time.atDate(requestDate), SeatCount(period.persons))
+          SeatCount.make(period.persons).map(AvailableSeat(hour.time.atDate(requestDate), _))
         }
       }
 
