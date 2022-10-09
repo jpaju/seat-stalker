@@ -18,7 +18,7 @@ object SimpleClient extends ZIOAppDefault:
     for
       _               <- ZIO.debug("Starting")
       now             <- Clock.localDateTime
-      message          = s"Noniih, laitetaas sit sttp rokkaa $now"
+      message         <- ZIO.fromEither(TelegramMessageBody.make(s"Sending telegram message at $now").toEither)
       telegramService <- ZIO.service[TelegramService]
       _               <- telegramService.sendMessage(message)
     yield ()

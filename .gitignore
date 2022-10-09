@@ -26,6 +26,9 @@ local.sbt
 .metals/
 metals.sbt
 
+# Coursier
+null/
+
 # Scala CLI
 .scala-build/
 
