@@ -5,8 +5,8 @@ import zio.prelude.Validation
 import zio.test.Assertion.*
 import zio.test.*
 
-object AvailableSeatsDomainSpec extends ZIOSpecDefault:
-  override def spec = suite("AvailableSeatsDomainSpec")(
+object RestaurantDomainSpec extends ZIOSpecDefault:
+  override def spec = suite("RestaurantDomainSpec")(
     suite("SeatCount")(
       test("cannot be lower than 1") {
         check(Gen.int(Int.MinValue, 0)) { n =>

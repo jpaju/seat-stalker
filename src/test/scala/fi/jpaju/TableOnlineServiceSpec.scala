@@ -42,10 +42,8 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
         .thenRespond(noPeriodsJson)
 
       withTableOnlineService(sttpBackendStub) { service =>
-        val parameters = defaultParameters
-
-        for result <- service.checkAvailableSeats(parameters)
-        yield assertTrue(result == Seats.NotAvailable)
+        for result <- service.checkAvailableSeats(defaultParameters)
+        yield assertTrue(result == SeatStatus.NotAvailable)
       }
     },
     test("when periods available, then returns Seats.Available") {
@@ -59,14 +57,11 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest.thenRespond(responseJson)
 
       withTableOnlineService(sttpBackendStub) { service =>
-        val parameters     = defaultParameters
-        val expectedResult = Seats.Available(
-          responseData.map { (seatCount, time) =>
-            AvailableSeat(time.atDate(parameters.from), seatCount)
-          }
+        val expectedResult = SeatStatus.Available(
+          responseData.map { (seatCount, time) => AvailableSeat(time.atDate(defaultParameters.from), seatCount) }
         )
 
-        for result <- service.checkAvailableSeats(parameters)
+        for result <- service.checkAvailableSeats(defaultParameters)
         yield assertTrue(result == expectedResult)
       }
     }
@@ -75,7 +70,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
   // =============================================== Helpers ===============================================
 
   private def withTableOnlineService[R, E, A](sttpBackend: SttpBackend[Task, Any])(
-      f: AvailableSeatsService => ZIO[R & AvailableSeatsService & SttpBackend[Task, Any], E, A]
+      f: AvailableSeatsService => ZIO[R & SttpBackend[Task, Any], E, A]
   ): ZIO[R, E, A] =
     ZIO
       .serviceWithZIO[AvailableSeatsService](f)

@@ -15,7 +15,7 @@ import java.time.*
 case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends AvailableSeatsService:
   import TableOnlineSeatsService.*
 
-  override def checkAvailableSeats(parameters: CheckSeatsParameters): UIO[Seats] =
+  override def checkAvailableSeats(parameters: CheckSeatsParameters): UIO[SeatStatus] =
     val queryParams  = Map("persons" -> parameters.seats, "date" -> parameters.from.toString)
     val restaurantId = parameters.restaurantId
     val url          = uri"https://service.tableonline.fi/public/r/$restaurantId/periods?$queryParams"
@@ -32,9 +32,9 @@ case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends 
         .orDie
 
     response.map { response =>
-      if response.isEmpty then Seats.NotAvailable
+      if response.isEmpty then SeatStatus.NotAvailable
       else
-        Seats.Available(
+        SeatStatus.Available(
           response
             .toAvailableSeats(parameters.from)
             .collect { case Validation.Success(_, seats) => seats }
