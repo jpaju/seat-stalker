@@ -4,8 +4,8 @@ import sttp.client3.*
 import sttp.client3.ziojson.*
 import zio.*
 import zio.json.*
-import zio.prelude.*
 import zio.prelude.Assertion.*
+import zio.prelude.*
 
 type TelegramMessageBody = TelegramMessageBody.Type
 object TelegramMessageBody extends Subtype[String]:
@@ -33,6 +33,6 @@ case class LiveTelegramService(config: TelegramConfig, sttpBackend: SttpBackend[
       val request     = basicRequest.get(url)
       sttpBackend.send(request).unit.orDie
 
-case class TelegramConfig(token: String, chatId: Int)
+case class TelegramConfig(token: String, chatId: Long)
 object LiveTelegramService:
   val layer = ZLayer.fromFunction(LiveTelegramService.apply)

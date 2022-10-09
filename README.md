@@ -1,8 +1,8 @@
 # Seat Stalker
 
 ## TODO
-- [ ] Actual logic to check for seats and send notifications accordingly
-- [ ] Format sent telegram messages nicely
+- [x] Actual logic to check for seats and send notifications accordingly
+- [x] Format sent telegram messages nicely
 - [ ] CI Pipeline to delpoy as scheduled Azure Function
 - [ ] Persist sent notications about seats so notification about the same seat wont be sent multiple times
 - [ ] Support adding new alerts via Telegram bot API?

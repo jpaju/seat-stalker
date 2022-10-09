@@ -31,6 +31,7 @@ case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends 
         .map(_.body)
         .orDie
 
+    // TODO If response.nextAvailableDate is Some(date), fetch seats for that date
     response.map { response =>
       if response.isEmpty then SeatStatus.NotAvailable
       else

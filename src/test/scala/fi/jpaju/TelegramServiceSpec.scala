@@ -43,7 +43,7 @@ object TelegramServiceSpec extends ZIOSpecDefault:
 
   // =============================================== Helpers ===============================================
 
-  private def responseJsonBody(chatId: Int): String = s"""
+  private def responseJsonBody(chatId: Long): String = s"""
     {
         "ok": true,
         "result": {
