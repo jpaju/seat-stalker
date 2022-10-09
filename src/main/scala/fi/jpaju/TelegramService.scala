@@ -1,3 +1,5 @@
+package fi.jpaju
+
 import sttp.client3.*
 import sttp.client3.ziojson.*
 import zio.*

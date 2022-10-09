@@ -1,13 +1,4 @@
-//> using lib "dev.zio::zio:2.0.2"
-//> using lib "dev.zio::zio-prelude:1.0.0-RC16"
-//> using lib "dev.zio::zio-json:0.3.0"
-//> using lib "com.softwaremill.sttp.client3::core:3.8.2"
-//> using lib "com.softwaremill.sttp.client3::async-http-client-backend-zio:3.8.2"
-//> using lib "com.softwaremill.sttp.client3::zio-json:3.8.2"
-
-//> using file "AvailableSeatsService.scala"
-//> using file "TableOnlineService.scala"
-//> using file "TelegramService.scala"
+package fi.jpaju
 
 import sttp.client3.httpclient.zio.HttpClientZioBackend
 import zio.*
@@ -37,7 +28,11 @@ object SimpleClient extends ZIOAppDefault:
                         seatsService.checkAvailableSeats(woolshedParams).debug("Kakolan ruusu")
     yield ()
 
-  val telegramConfig = ???
+  // TODO Lataa jostain muualta
+  val telegramConfig = LiveTelegramService.Config(
+    token = "5792135341:AAHgy5CTYumV39UOXsXJqfrba2v-9VZIb94",
+    chatId = "-1001817665705"
+  )
 
   val run =
     program.provide(
