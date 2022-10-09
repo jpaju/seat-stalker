@@ -13,31 +13,36 @@ object SimpleClient extends ZIOAppDefault:
   val kaskisParams       = CheckSeatsParameters(RestaurantId("291"), date, seatCount)
   val kakolanRuusuParams = CheckSeatsParameters(RestaurantId("702"), date, seatCount)
 
-  val program =
+  val telegramProgram =
     for
       _               <- ZIO.debug("Starting")
       now             <- Clock.localDateTime
       message          = s"Noniih, laitetaas sit sttp rokkaa $now"
       telegramService <- ZIO.service[TelegramService]
       _               <- telegramService.sendMessage(message)
-
-      now          <- Clock.localDateTime.map(_.toLocalDate)
-      seatsService <- ZIO.service[AvailableSeatsService]
-      _            <- seatsService.checkAvailableSeats(kaskisParams).debug("Kaskis") <&>
-                        seatsService.checkAvailableSeats(kakolanRuusuParams).debug("Kakolan ruusu") <&>
-                        seatsService.checkAvailableSeats(woolshedParams).debug("Kakolan ruusu")
     yield ()
 
-  // TODO Lataa jostain muualta
-  val telegramConfig = LiveTelegramService.Config(
-    token = "5792135341:AAHgy5CTYumV39UOXsXJqfrba2v-9VZIb94",
-    chatId = "-1001817665705"
-  )
+  val availableSeatsProgram =
+    val program =
+      for
+        now          <- Clock.localDateTime.map(_.toLocalDate)
+        seatsService <- ZIO.service[AvailableSeatsService]
+        _            <- seatsService.checkAvailableSeats(kaskisParams).debug("Kaskis") <&>
+                          seatsService.checkAvailableSeats(kakolanRuusuParams).debug("Kakolan ruusu") <&>
+                          seatsService.checkAvailableSeats(woolshedParams).debug("Kakolan ruusu")
+      yield ()
+
+  val program =
+    for
+      _      <- ZIO.debug("Starting")
+      config <- ZIO.service[TelegramConfig].debug("Config")
+    yield ()
 
   val run =
     program.provide(
-      TableOnlineSeatsService.layer,
-      HttpClientZioBackend.layer(),
-      LiveTelegramService.layer,
-      ZLayer.succeed(telegramConfig)
+      ApplicationConfig.layer
+        // TableOnlineSeatsService.layer,
+        // HttpClientZioBackend.layer(),
+        // LiveTelegramService.layer,
+        // ZLayer.succeed(telegramConfig)
     )

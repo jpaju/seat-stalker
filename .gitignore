@@ -33,3 +33,6 @@ metals.sbt
 .idea
 .idea_modules
 /.worksheet/
+
+# Development environment
+*.env

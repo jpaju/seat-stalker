@@ -8,8 +8,7 @@ import zio.json.*
 trait TelegramService:
   def sendMessage(message: String): UIO[Unit]
 
-case class LiveTelegramService(config: LiveTelegramService.Config, sttpBackend: SttpBackend[Task, Any])
-    extends TelegramService:
+case class LiveTelegramService(config: TelegramConfig, sttpBackend: SttpBackend[Task, Any]) extends TelegramService:
 
   override def sendMessage(message: String): UIO[Unit] =
     val queryParams = Map(
@@ -20,7 +19,6 @@ case class LiveTelegramService(config: LiveTelegramService.Config, sttpBackend: 
     val request     = basicRequest.get(url)
     sttpBackend.send(request).debug("Telegram").unit.orDie
 
+case class TelegramConfig(token: String, chatId: String)
 object LiveTelegramService:
-  case class Config(token: String, chatId: String)
-
   val layer = ZLayer.fromFunction(LiveTelegramService.apply)
