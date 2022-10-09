@@ -1,6 +1,7 @@
 package fi.jpaju
 
-import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
+import sttp.client3.httpclient.zio.*
 import zio.*
 
 import java.time.LocalDate
@@ -41,8 +42,8 @@ object SimpleClient extends ZIOAppDefault:
   val run =
     program.provide(
       ApplicationConfig.layer
+        // AsyncHttpClientZioBackend.layer()
         // TableOnlineSeatsService.layer,
-        // HttpClientZioBackend.layer(),
         // LiveTelegramService.layer,
         // ZLayer.succeed(telegramConfig)
     )

@@ -7,11 +7,15 @@ import zio.json.*
 
 import java.time.*
 
+/** Service for interacting with TableOnline API
+  *
+  * API docs: http://gol-api-doc.s3-website-eu-west-1.amazonaws.com/#introduction
+  */
 case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends AvailableSeatsService:
   import TableOnlineSeatsService.*
 
   override def checkAvailableSeats(parameters: CheckSeatsParameters): UIO[Seats] =
-    val queryParams  = Map("persons" -> parameters.seats)
+    val queryParams  = Map("persons" -> parameters.seats, "date" -> parameters.from.toString)
     val restaurantId = parameters.restaurantId
     val url          = uri"https://service.tableonline.fi/public/r/$restaurantId/periods?$queryParams"
     val request      =
@@ -24,7 +28,6 @@ case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends 
       sttpBackend
         .send(request)
         .map(_.body)
-        .debug("TableOnline response")
         .orDie
 
     response.map { response =>

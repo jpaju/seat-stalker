@@ -19,6 +19,8 @@ val zioVersion       = "2.0.2"
 val zioConfigVersion = "3.0.2"
 val sttpVersion      = "3.8.2"
 
+
+
 libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio"                           % zioVersion,
   "dev.zio"                       %% "zio-json"                      % "0.3.0",
@@ -29,3 +31,10 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % sttpVersion,
   "com.softwaremill.sttp.client3" %% "zio-json"                      % sttpVersion
 )
+
+libraryDependencies ++= Seq(
+  "dev.zio" %% "zio-test"          % "2.0.2",
+  "dev.zio" %% "zio-test-sbt"      % "2.0.2",
+  "dev.zio" %% "zio-test-magnolia" % "2.0.2"
+).map(_ % Test)
+testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
