@@ -1,0 +1,21 @@
+{
+  "scriptFile": "../seat-stalker.jar",
+  "entryPoint": "fi.jpaju.ScalaHttpFunction.run",
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "authLevel": "ANONYMOUS"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    }
+  ]
+}

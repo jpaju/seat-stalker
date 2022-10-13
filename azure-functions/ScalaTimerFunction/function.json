@@ -1,0 +1,12 @@
+{
+  "scriptFile": "../seat-stalker.jar",
+  "entryPoint": "fi.jpaju.ScalaTimerFunction.run",
+  "bindings": [
+    {
+      "type": "timerTrigger",
+      "direction": "in",
+      "name": "timerInfo",
+      "schedule": "*/15 * * * * *"
+    }
+  ]
+}

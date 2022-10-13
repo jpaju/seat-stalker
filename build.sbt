@@ -19,8 +19,6 @@ val zioVersion       = "2.0.2"
 val zioConfigVersion = "3.0.2"
 val sttpVersion      = "3.8.2"
 
-
-
 libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio"                           % zioVersion,
   "dev.zio"                       %% "zio-json"                      % "0.3.0",
@@ -29,7 +27,8 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio-config-magnolia"           % zioConfigVersion,
   "com.softwaremill.sttp.client3" %% "core"                          % sttpVersion,
   "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % sttpVersion,
-  "com.softwaremill.sttp.client3" %% "zio-json"                      % sttpVersion
+  "com.softwaremill.sttp.client3" %% "zio-json"                      % sttpVersion,
+  "com.microsoft.azure.functions"  % "azure-functions-java-library"  % "2.0.1"
 )
 
 libraryDependencies ++= Seq(
@@ -38,3 +37,11 @@ libraryDependencies ++= Seq(
   "dev.zio" %% "zio-test-magnolia" % "2.0.2"
 ).map(_ % Test)
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+
+assembly / assemblyOutputPath    := baseDirectory.value / "azure-functions" / "seat-stalker.jar"
+assembly / assemblyMergeStrategy := {
+  case x if x.contains("io.netty.versions.properties") => MergeStrategy.discard
+  case x                                               =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
