@@ -6,22 +6,24 @@ import zio.*
 
 import java.time.LocalDate
 
-object Main extends ZIOAppDefault:
+object SeatStalker:
   val kaskis       = Restaurant(RestaurantId("291"), "Kaskis")
   val kakolanRuusu = Restaurant(RestaurantId("702"), "Kakolan ruusu")
   val mami         = Restaurant(RestaurantId("723"), "Mami")
 
-  val seatRequirements = SeatRequirements(kaskis, SeatCount(2))
+  val restaurants      = List(kaskis, mami, kakolanRuusu)
+  val seatRequirements = restaurants.map(SeatRequirements(_, SeatCount(2)))
 
-  val program =
+  val app =
     for
-      _ <- ZIO.debug("Starting")
-      _ <- ZIO.serviceWithZIO[AvailableSeatNotifier](_.checkAndNotify(seatRequirements))
-      _ <- ZIO.debug("Stopping")
+      _       <- ZIO.debug("Starting seat stalker")
+      service <- ZIO.service[AvailableSeatNotifier]
+      _       <- ZIO.foreachPar(seatRequirements)(service.checkAndNotify)
+      _       <- ZIO.debug("Seat stalker finished")
     yield ()
 
   val run =
-    program.provide(
+    app.provide(
       LiveAvailableSeatNotifier.layer,
       ApplicationConfig.layer,
       AsyncHttpClientZioBackend.layer(),

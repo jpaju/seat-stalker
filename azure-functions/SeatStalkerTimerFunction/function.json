@@ -1,6 +1,6 @@
 {
   "scriptFile": "../seat-stalker.jar",
-  "entryPoint": "fi.jpaju.ScalaTimerFunction.run",
+  "entryPoint": "fi.jpaju.SeatStalkerTimerFunction.run",
   "bindings": [
     {
       "type": "timerTrigger",
