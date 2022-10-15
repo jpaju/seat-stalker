@@ -19,7 +19,9 @@ case class LiveAvailableSeatNotifier(
   def checkAndNotify(requirements: SeatRequirements): UIO[Unit] =
     for
       now        <- Clock.localDateTime.map(_.toLocalDate)
+      _          <- ZIO.logDebug(s"Checking available seats for ${requirements.restaurant.name} at $now")
       seatStatus <- checkSeats(requirements, now)
+      _          <- ZIO.logDebug(s"Found seats for ${requirements.restaurant.name}: $seatStatus")
       _          <- sendNotifications(requirements.restaurant, seatStatus)
     yield ()
 

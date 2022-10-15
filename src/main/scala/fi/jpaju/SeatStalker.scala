@@ -16,10 +16,10 @@ object SeatStalker:
 
   val app =
     for
-      _       <- ZIO.debug("Starting seat stalker")
+      _       <- ZIO.log("Seat stalker started")
       service <- ZIO.service[AvailableSeatNotifier]
       _       <- ZIO.foreachPar(seatRequirements)(service.checkAndNotify)
-      _       <- ZIO.debug("Seat stalker finished")
+      _       <- ZIO.log("Seat stalker finished successfully")
     yield ()
 
   val run =

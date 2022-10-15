@@ -14,8 +14,8 @@ class SeatStalkerTimerFunction:
       @TimerTrigger(name = "timerInfo", schedule = "*/15 * * * * *") timerInfo: String,
       context: ExecutionContext
   ): Unit =
-    val msg     = s"Timer triggered, TimerInfo: $timerInfo"
-    val logIt   = ZIO.attempt(context.getLogger.info(msg))
-    val program = (logIt *> SeatStalker.run)
+    val program = ZIO.log(s"Timer triggered, TimerInfo: $timerInfo") *> SeatStalker.run
 
-    ZIOAppRunner.runToExit(program)
+    ZIOAppRunner.runThrowOnError(
+      program.provide(Logging.azFunLoggerLayer(context.getLogger))
+    )
