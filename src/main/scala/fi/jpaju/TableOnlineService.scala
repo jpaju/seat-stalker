@@ -16,6 +16,23 @@ case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends 
   import TableOnlineSeatsService.*
 
   override def checkAvailableSeats(parameters: CheckSeatsParameters): UIO[SeatStatus] =
+    val response = fetchPeriods(parameters)
+
+    response.flatMap {
+      case PeriodsResponse(Nil, None) =>
+        ZIO.succeed(SeatStatus.NotAvailable)
+
+      case PeriodsResponse(Nil, Some(nextAvailableDate)) =>
+        val parametersWithNewDate = parameters.copy(from = nextAvailableDate)
+        checkAvailableSeats(parametersWithNewDate)
+
+      case PeriodsResponse(periods, _) =>
+        val seats  = toAvailableSeats(periods, parameters.from)
+        val result = SeatStatus.Available(seats)
+        ZIO.succeed(result)
+    }
+
+  private def fetchPeriods(parameters: CheckSeatsParameters): UIO[PeriodsResponse] =
     val queryParams  = Map("persons" -> parameters.seats, "date" -> parameters.from.toString)
     val restaurantId = parameters.restaurantId
     val url          = uri"https://service.tableonline.fi/public/r/$restaurantId/periods?$queryParams"
@@ -25,27 +42,25 @@ case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends 
         .response(asJson[PeriodsResponse])
         .responseGetRight
 
-    val response =
-      sttpBackend
-        .send(request)
-        .map(_.body)
-        .orDie
+    sttpBackend
+      .send(request)
+      .map(_.body)
+      .orDie
 
-    // TODO If response.nextAvailableDate is Some(date), fetch seats for that date
-    response.map { response =>
-      if response.isEmpty then SeatStatus.NotAvailable
-      else
-        SeatStatus.Available(
-          response
-            .toAvailableSeats(parameters.from)
-            .collect { case Validation.Success(_, seats) => seats }
-        )
-    }
+  private def toAvailableSeats(periods: List[Period], date: LocalDate) =
+    periods
+      .flatMap { period =>
+        period.hours.map { hour =>
+          SeatCount.make(period.persons).map(AvailableSeat(hour.time.atDate(date), _))
+        }
+      }
+      .collect { case Validation.Success(_, seats) => seats }
 
 object TableOnlineSeatsService:
-  private case class PeriodsResponse(periods: List[Period], nextAvailableDate: Option[LocalDate]):
-    def isEmpty: Boolean = periods.isEmpty
-
+  private case class PeriodsResponse(
+      periods: List[Period],
+      @jsonField("next_available_date") nextAvailableDate: Option[LocalDate]
+  ):
     def toAvailableSeats(requestDate: LocalDate): List[Validation[String, AvailableSeat]] =
       periods.flatMap { period =>
         period.hours.map { hour =>

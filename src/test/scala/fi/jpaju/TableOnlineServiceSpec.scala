@@ -14,7 +14,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       check(Gens.checkSeatParameters) { (parameters) =>
         val recordingBackend = new RecordingSttpBackend(
           AsyncHttpClientZioBackend.stub.whenAnyRequest
-            .thenRespond(noPeriodsJson)
+            .thenRespond(noSeatsAvailableJson)
         )
 
         def assertCorrectRequest(request: Request[?, ?]): TestResult =
@@ -39,7 +39,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
     },
     test("when next_available_date is null, then returns Seats.NotAvailable") {
       val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest
-        .thenRespond(noPeriodsJson)
+        .thenRespond(noSeatsAvailableJson)
 
       withTableOnlineService(sttpBackendStub) { service =>
         for result <- service.checkAvailableSeats(defaultParameters)
@@ -53,7 +53,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
         (SeatCount(12), LocalTime.parse("13:18:00"))
       )
 
-      val responseJson    = periodsJson(responseData)
+      val responseJson    = seatsAvailableNowJson(responseData)
       val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest.thenRespond(responseJson)
 
       withTableOnlineService(sttpBackendStub) { service =>
@@ -62,6 +62,36 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
         )
 
         for result <- service.checkAvailableSeats(defaultParameters)
+        yield assertTrue(result == expectedResult)
+      }
+    },
+    test("when no periods available but next_available_date is NOT null, fetch seats for that date") {
+      val now        = LocalDate.parse("2021-03-01")
+      val later      = LocalDate.parse("2021-03-05")
+      val parameters = CheckSeatsParameters(RestaurantId("723"), now, SeatCount(2))
+
+      val nextAvailableSeats = List(SeatCount(2) -> LocalTime.parse("12:00:00"))
+
+      def queriedDateIs(uri: Uri, date: LocalDate) =
+        uri.paramsMap.get("date").contains(date.toString)
+
+      val sttpBackendStub = AsyncHttpClientZioBackend.stub
+        .whenRequestMatchesPartial({
+          case r if queriedDateIs(r.uri, now) =>
+            Response.ok(seatsAvailableLaterJson(later))
+
+          case r if queriedDateIs(r.uri, later) =>
+            Response.ok(seatsAvailableNowJson(nextAvailableSeats))
+        })
+
+      withTableOnlineService(sttpBackendStub) { service =>
+        val expectedResult = SeatStatus.Available(
+          nextAvailableSeats.map { (seatCount, time) =>
+            AvailableSeat(time.atDate(later), seatCount)
+          }
+        )
+
+        for result <- service.checkAvailableSeats(parameters)
         yield assertTrue(result == expectedResult)
       }
     }
@@ -83,14 +113,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       SeatCount(2)
     )
 
-  private def noPeriodsJson: String = """
-    {
-        "periods": [],
-        "next_available_date": null
-    }
-    """
-
-  private def periodsJson(periods: List[(SeatCount, LocalTime)]): String =
+  private def seatsAvailableNowJson(periods: List[(SeatCount, LocalTime)]): String =
     def singlePeriodJson(seatCount: SeatCount, time: LocalTime): String = s"""
       {
           "period": "lunch",
@@ -106,4 +129,19 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       """
 
     s"""{ "periods": [ ${periods.map(singlePeriodJson).mkString(",")} ] }"""
-  end periodsJson
+  end seatsAvailableNowJson
+
+  private def seatsAvailableLaterJson(later: LocalDate): String =
+    s"""
+    {
+        "periods": [],
+        "next_available_date": "${later.toString}"
+    }
+    """
+
+  private def noSeatsAvailableJson: String = """
+    {
+        "periods": [],
+        "next_available_date": null
+    }
+    """
