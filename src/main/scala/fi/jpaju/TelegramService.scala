@@ -30,7 +30,8 @@ case class LiveTelegramService(config: TelegramConfig, sttpBackend: SttpBackend[
         "text"    -> messageBody
       )
       val url         = uri"https://api.telegram.org/bot${config.token}/sendMessage?$queryParams"
-      val request     = basicRequest.get(url)
+      val request     = basicRequest.get(url).responseGetRight
+
       ZIO.log(s"Sending message $messageBody") *> sttpBackend.send(request).unit.orDie
 
 case class TelegramConfig(token: String, chatId: Long)

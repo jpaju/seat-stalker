@@ -38,8 +38,52 @@ object TelegramServiceSpec extends ZIOSpecDefault:
           yield assertCorrectRequest(request)
         }
       }
+    },
+    test("when sending message with bad telegram API token, then should fail") {
+      val badTokenResponse = Response(
+        s"""
+        {
+            "ok": false,
+            "error_code": 404,
+            "description": "Not Found"
+        }""",
+        StatusCode.NotFound
+      )
+
+      val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest
+        .thenRespond(badTokenResponse)
+
+      check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
+        withTelegramService(telegramConfig, sttpBackendStub) { service =>
+          service.sendMessage(messageBody).exit.map { exit =>
+            assert(exit.isFailure)(isTrue)
+          }
+        }
+      }
+    },
+    test("when sending message with invalid chat id, then should fail") {
+      val chatNotFoundResponse = Response(
+        s"""
+        {
+            "ok": false,
+            "error_code": 400,
+            "description": "Bad Request: chat not found"
+        }""",
+        StatusCode.BadRequest
+      )
+
+      val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest
+        .thenRespond(chatNotFoundResponse)
+
+      check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
+        withTelegramService(telegramConfig, sttpBackendStub) { service =>
+          service.sendMessage(messageBody).exit.map { exit =>
+            assert(exit.isFailure)(isTrue)
+          }
+        }
+      }
     }
-  )
+  ).provide(Runtime.removeDefaultLoggers)
 
   // =============================================== Helpers ===============================================
 
