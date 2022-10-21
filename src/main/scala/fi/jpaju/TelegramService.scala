@@ -34,6 +34,7 @@ case class LiveTelegramService(config: TelegramConfig, sttpBackend: SttpBackend[
 
       ZIO.log(s"Sending message $messageBody") *> sttpBackend.send(request).unit.orDie
 
-case class TelegramConfig(token: String, chatId: Long)
+case class TelegramConfig(token: String, chatId: String)
+
 object LiveTelegramService:
   val layer = ZLayer.fromFunction(LiveTelegramService.apply)

@@ -10,8 +10,10 @@ case class ApplicationConfig(telegram: TelegramConfig)
 object ApplicationConfig:
   private val keyDelimiter     = Option('_')
   private val configDescriptor = descriptor[ApplicationConfig]
-  private val configSource     =
-    ConfigSource.fromSystemEnv(keyDelimiter = keyDelimiter) <> ConfigSource.fromSystemProps(keyDelimiter = keyDelimiter)
 
-  private val configLayer = ZLayer { read(configDescriptor.from(configSource)) }
+  private val configSource    = ConfigSource.fromSystemEnv(keyDelimiter = keyDelimiter)
+  private val lowerCaseSource = configSource.mapKeys(key => key.toLowerCase) // To combat some Azure madness
+  private val combinedSource  = configSource <> lowerCaseSource
+
+  private val configLayer = ZLayer { read(configDescriptor.from(combinedSource)) }
   val layer               = configLayer.narrow(_.telegram)
