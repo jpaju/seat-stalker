@@ -50,7 +50,8 @@ case class LiveStalkerJobRunner(
         val retryPolicy = Schedule.exponential(1.second) && Schedule.recurs(5)
         telegramMessage
           .flatMap(telegramService.sendMessage(_).retry(retryPolicy))
-          .orDieWith(err => new RuntimeException(s"Failed to send Telegram message: $err"))
+          .tapError(err => ZIO.logError(s"Failed to notify about available seats: $availableSeats"))
+          .ignore
       }
       .getOrElse(ZIO.unit)
 
