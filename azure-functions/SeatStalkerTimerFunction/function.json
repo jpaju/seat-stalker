@@ -6,7 +6,7 @@
       "type": "timerTrigger",
       "direction": "in",
       "name": "timerInfo",
-      "schedule": "*/15 * * * * *"
+      "schedule": "5 0 0 * * *"
     }
   ]
 }

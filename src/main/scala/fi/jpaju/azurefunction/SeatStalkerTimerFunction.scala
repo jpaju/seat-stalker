@@ -12,7 +12,7 @@ import java.util.Optional
 class SeatStalkerTimerFunction:
   @FunctionName("SeatStalkerTimerFunction")
   def run(
-      @TimerTrigger(name = "timerInfo", schedule = "*/15 * * * * *") timerInfo: String,
+      @TimerTrigger(name = "timerInfo", schedule = "5 0 0 * * *") timerInfo: String,
       context: ExecutionContext
   ): Unit =
     val program = ZIO.log(s"Timer triggered, TimerInfo: $timerInfo") *> StalkerApp.run

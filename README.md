@@ -5,11 +5,13 @@ Application for notifying about free seats in popular restaurants. Uses telegram
 ## TODO
 - [x] Actual logic to check for seats and send notifications accordingly
 - [x] Format sent telegram messages nicely
-- [ ] CI Pipeline to delpoy as scheduled Azure Function
+- [x] CI Pipeline to delpoy as scheduled Azure Function
 - [ ] Terraform to manage infrastructure
 - [ ] Combine multiple free seats together in one message
 - [ ] Persist sent notications about seats so notification about the same seat wont be sent multiple times
 - [ ] Support adding new alerts via Telegram bot API?
+- New integrations
+	- [ ] [Dinnerbooking.com](https://www.dinnerbooking.com/)
 
 ## Development enviornment
 The application could be run locally either using SBT or Azure Functions Core Tools. Both approaches require Telegram configuration in order to send notifications.
