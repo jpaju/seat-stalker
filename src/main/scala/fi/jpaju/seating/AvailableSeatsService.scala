@@ -1,4 +1,4 @@
-package fi.jpaju
+package fi.jpaju.seating
 
 import zio.*
 

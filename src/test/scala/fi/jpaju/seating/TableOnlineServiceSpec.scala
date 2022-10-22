@@ -1,4 +1,5 @@
 package fi.jpaju
+package seating
 
 import sttp.client3.*
 import sttp.client3.testing.*

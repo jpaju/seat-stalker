@@ -1,6 +1,7 @@
 package fi.jpaju
 package util
 
+import fi.jpaju.telegram.*
 import zio.*
 
 case class FakeTelegramService(ref: Ref[List[TelegramMessageBody]]) extends TelegramService:

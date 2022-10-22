@@ -1,6 +1,8 @@
 package fi.jpaju
 package util
 
+import fi.jpaju.seating.*
+
 import zio.*
 
 case class FakeAvailableSeatsService(seats: Ref[Map[RestaurantId, SeatStatus]]) extends AvailableSeatsService:

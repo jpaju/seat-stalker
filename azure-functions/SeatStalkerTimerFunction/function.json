@@ -1,6 +1,6 @@
 {
   "scriptFile": "../seat-stalker.jar",
-  "entryPoint": "fi.jpaju.SeatStalkerTimerFunction.run",
+  "entryPoint": "fi.jpaju.azurefunction.SeatStalkerTimerFunction.run",
   "bindings": [
     {
       "type": "timerTrigger",

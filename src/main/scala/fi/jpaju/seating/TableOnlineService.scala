@@ -1,4 +1,4 @@
-package fi.jpaju
+package fi.jpaju.seating
 
 import sttp.client3.*
 import sttp.client3.ziojson.*

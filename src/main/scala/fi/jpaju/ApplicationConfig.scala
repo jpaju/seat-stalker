@@ -1,5 +1,7 @@
 package fi.jpaju
 
+import fi.jpaju.telegram.*
+
 import zio.*
 import zio.config.*
 import zio.config.magnolia.*

@@ -1,4 +1,4 @@
-package fi.jpaju
+package fi.jpaju.azurefunction
 
 import zio.*
 

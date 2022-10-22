@@ -1,4 +1,4 @@
-package fi.jpaju
+package fi.jpaju.telegram
 
 import sttp.client3.*
 import sttp.client3.ziojson.*
@@ -6,13 +6,6 @@ import zio.*
 import zio.json.*
 import zio.prelude.Assertion.*
 import zio.prelude.*
-
-type TelegramMessageBody = TelegramMessageBody.Type
-object TelegramMessageBody extends Subtype[String]:
-  override inline def assertion =
-    hasLength(greaterThan(0))
-
-case class MessageDeliveryError(message: String, throwable: Throwable)
 
 trait TelegramService:
   def sendMessage(messageBody: TelegramMessageBody): IO[MessageDeliveryError, Unit]
@@ -33,27 +26,25 @@ case class LiveTelegramService(config: TelegramConfig, sttpBackend: SttpBackend[
     val url         = uri"https://api.telegram.org/bot${config.token}/sendMessage?$queryParams"
     val request     = basicRequest
       .get(url)
-      .response(
-        asEither(asJson[TelegramErrorResponse], ignore)
-      ) // 2xx response indicates that the message delivery was successful
+      .response(asEither(asJson[TelegramErrorResponse], ignore)) // 2xx response indicates successful delivery
 
     val telegramApiResponse = sttpBackend
       .send(request)
-      .map(_.body)
-
-    val errorsHandled = telegramApiResponse
       .mapError(t => MessageDeliveryError("Network failure", t)) // Throwable indicates network failure
+      .map(_.body)
       .reject { case Left(errorResponse) => // Left indicates non 2xx response code
         errorResponse.fold(
           responseException => MessageDeliveryError("Response exception", responseException),
           telegramErr => MessageDeliveryError("Telegram API error", telegramErr)
         )
       }
+
+    telegramApiResponse
+      .tapBoth(
+        deliveryError => ZIO.logWarning(s"Failed sending telegram message: $messageBody, with error: $deliveryError"),
+        _ => ZIO.log(s"Message delivered to Telegram: $messageBody")
+      )
       .unit
-
-    ZIO.log(s"Sending message $messageBody") *> errorsHandled
-
-case class TelegramConfig(token: String, chatId: String)
 
 object LiveTelegramService:
   private case class TelegramErrorResponse(

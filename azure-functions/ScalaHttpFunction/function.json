@@ -1,6 +1,6 @@
 {
   "scriptFile": "../seat-stalker.jar",
-  "entryPoint": "fi.jpaju.ScalaHttpFunction.run",
+  "entryPoint": "fi.jpaju.azurefunction.ScalaHttpFunction.run",
   "bindings": [
     {
       "type": "httpTrigger",

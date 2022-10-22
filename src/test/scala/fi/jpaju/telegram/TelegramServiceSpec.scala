@@ -1,4 +1,5 @@
 package fi.jpaju
+package telegram
 
 import sttp.client3.*
 import sttp.client3.testing.*
@@ -86,7 +87,7 @@ object TelegramServiceSpec extends ZIOSpecDefault:
 
   // =============================================== Helpers ===============================================
 
-  private def responseJsonBody(chatId: Long): String = s"""
+  private def responseJsonBody(chatId: String): String = s"""
     {
         "ok": true,
         "result": {

@@ -1,18 +1,21 @@
 package fi.jpaju
+package stalker
 
+import fi.jpaju.seating.*
+import fi.jpaju.telegram.*
 import zio.*
 import zio.test.Assertion.*
 import zio.test.*
 
 import java.time.LocalDateTime
 
-object AvailableSeatNotifierSpec extends ZIOSpecDefault:
-  override def spec = suite("AvailableSeatNotifierSpec")(
+object StalkerJobRunnerSpec extends ZIOSpecDefault:
+  override def spec = suite("StalkerJobRunnerSpec")(
     test("should not send notification when no seats are available") {
-      check(Gens.seatRequirements) { params =>
+      check(Gens.stalkerJobDefinition) { jobDefinition =>
         for
-          service      <- ZIO.service[AvailableSeatNotifier]
-          _            <- service.checkAndNotify(params)
+          service      <- ZIO.service[StalkerJobRunner]
+          _            <- service.runJob(jobDefinition)
           sentMessages <- getSentTelegramMessages
         yield assertTrue(sentMessages.isEmpty)
       }
@@ -20,19 +23,19 @@ object AvailableSeatNotifierSpec extends ZIOSpecDefault:
     test("should send notification when seats available") {
       val availableSeatsGen = Gen.listOfBounded(1, 50)(Gens.availableSeat)
 
-      check(Gens.seatRequirements, availableSeatsGen) { (requirements, availableSeats) =>
+      check(Gens.stalkerJobDefinition, availableSeatsGen) { (jobDefinitions, availableSeats) =>
         val seatStatus = SeatStatus.Available(availableSeats)
 
         for
-          _            <- setAvailableSeats(Map(requirements.restaurant.id -> seatStatus))
-          service      <- ZIO.service[AvailableSeatNotifier]
-          _            <- service.checkAndNotify(requirements)
+          _            <- setAvailableSeats(Map(jobDefinitions.restaurant.id -> seatStatus))
+          service      <- ZIO.service[StalkerJobRunner]
+          _            <- service.runJob(jobDefinitions)
           sentMessages <- getSentTelegramMessages <* resetSentTelegramMessages
         yield assertTrue(sentMessages.size == 1)
       }
     }
   ).provide(
-    LiveAvailableSeatNotifier.layer,
+    LiveStalkerJobRunner.layer,
     FakeTelegramService.layer,
     FakeAvailableSeatsService.layer,
     ZLayer.fromZIO(Ref.make(List.empty[TelegramMessageBody])),

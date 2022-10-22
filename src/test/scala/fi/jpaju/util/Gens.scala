@@ -1,6 +1,9 @@
 package fi.jpaju
 package util
 
+import fi.jpaju.seating.*
+import fi.jpaju.stalker.*
+import fi.jpaju.telegram.*
 import zio.*
 import zio.prelude.*
 import zio.test.*
@@ -27,8 +30,8 @@ object Gens:
 
   // =============================================== Services ===============================================
 
-  val seatRequirements: Gen[Any, SeatRequirements] =
-    (restaurant <*> seatCount).map(SeatRequirements.apply)
+  val stalkerJobDefinition: Gen[Any, StalkerJobDefinition] =
+    (restaurant <*> seatCount).map(StalkerJobDefinition.apply)
 
   val checkSeatParameters: Gen[Any, CheckSeatsParameters] = (
     restaurantId <*> Gen.localDate <*> seatCount
@@ -37,7 +40,7 @@ object Gens:
   // =============================================== Telegram ===============================================
 
   val telegramConfig: Gen[Any, TelegramConfig] =
-    (Gen.asciiString <*> Gen.long).map(TelegramConfig.apply)
+    (Gen.asciiString <*> Gen.asciiString.nonEmpty).map(TelegramConfig.apply)
 
   val telegramMessageBody: Gen[Any, TelegramMessageBody] =
     Gen // Use large generator to make sure long messages are generated

@@ -1,4 +1,4 @@
-package fi.jpaju
+package fi.jpaju.azurefunction
 
 import com.microsoft.azure.functions.ExecutionContext
 import com.microsoft.azure.functions.HttpMethod

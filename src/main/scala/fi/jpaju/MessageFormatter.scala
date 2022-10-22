@@ -1,5 +1,8 @@
 package fi.jpaju
 
+import fi.jpaju.seating.*
+import fi.jpaju.telegram.*
+
 import java.time.format.DateTimeFormatter
 
 object MessageFormatter:

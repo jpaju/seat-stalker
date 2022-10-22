@@ -1,12 +1,13 @@
 package fi.jpaju
+package seating
 
 import zio.*
 import zio.prelude.Validation
 import zio.test.Assertion.*
 import zio.test.*
 
-object RestaurantDomainSpec extends ZIOSpecDefault:
-  override def spec = suite("RestaurantDomainSpec")(
+object SeatingModelSpec extends ZIOSpecDefault:
+  override def spec = suite("SeatingModelSpec")(
     suite("SeatCount")(
       test("cannot be lower than 1") {
         check(Gen.int(Int.MinValue, 0)) { n =>
