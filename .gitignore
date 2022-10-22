@@ -39,3 +39,4 @@ null/
 # Development environment
 *.env
 *.jar
+*local.settings.json
