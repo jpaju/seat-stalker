@@ -9,7 +9,7 @@ import zio.test.*
 import java.time.*
 
 object TelegramServiceSpec extends ZIOSpecDefault:
-  override def spec = suite("TableOnlineServiceSpec")(
+  override def spec = suite("TelegramServiceSpec")(
     test("when sending message, then Telegram API is called with correct parameters") {
       check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
         val chatId = telegramConfig.chatId
@@ -77,9 +77,8 @@ object TelegramServiceSpec extends ZIOSpecDefault:
 
       check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
         withTelegramService(telegramConfig, sttpBackendStub) { service =>
-          service.sendMessage(messageBody).exit.map { exit =>
-            assert(exit.isFailure)(isTrue)
-          }
+          val result = service.sendMessage(messageBody).exit
+          assertZIO(result)(fails(anything))
         }
       }
     }
