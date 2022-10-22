@@ -37,9 +37,7 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
   ).provide(
     LiveStalkerJobRunner.layer,
     FakeTelegramService.layer,
-    FakeAvailableSeatsService.layer,
-    ZLayer.fromZIO(Ref.make(List.empty[TelegramMessageBody])),
-    ZLayer.fromZIO(Ref.make(Map.empty[RestaurantId, SeatStatus]))
+    FakeAvailableSeatsService.layer
   )
 
   private def getSentTelegramMessages: URIO[FakeTelegramService, List[TelegramMessageBody]] =

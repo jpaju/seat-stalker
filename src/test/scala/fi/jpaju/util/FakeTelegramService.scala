@@ -9,4 +9,8 @@ case class FakeTelegramService(ref: Ref[List[TelegramMessageBody]]) extends Tele
     ref.update(_ :+ message)
 
 object FakeTelegramService:
-  val layer = ZLayer.fromFunction(FakeTelegramService.apply)
+  val layer = ZLayer.fromZIO {
+    Ref
+      .make(List.empty[TelegramMessageBody])
+      .map(FakeTelegramService.apply)
+  }
