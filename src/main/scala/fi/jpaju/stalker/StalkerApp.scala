@@ -1,7 +1,7 @@
 package fi.jpaju.stalker
 
 import fi.jpaju.*
-import fi.jpaju.seating.*
+import fi.jpaju.restaurant.*
 import fi.jpaju.telegram.*
 import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import sttp.client3.httpclient.zio.*
@@ -14,7 +14,7 @@ object StalkerApp:
   val metsäMäki = Restaurant(RestaurantId("1286"), "Ravintola Metsämäki")
 
   val restaurants    = List(kaskis, metsäMäki)
-  val jobDefinitions = restaurants.map(StalkerJobDefinition(_, SeatCount(2)))
+  val jobDefinitions = restaurants.map(StalkerJobDefinition(_, PersonCount(2)))
 
   val app =
     for
@@ -29,6 +29,6 @@ object StalkerApp:
       LiveStalkerJobRunner.layer,
       ApplicationConfig.layer,
       AsyncHttpClientZioBackend.layer(),
-      TableOnlineSeatsService.layer,
+      TableOnlineIntegration.layer,
       LiveTelegramService.layer
     )

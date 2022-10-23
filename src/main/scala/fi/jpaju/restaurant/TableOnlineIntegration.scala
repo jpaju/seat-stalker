@@ -1,4 +1,4 @@
-package fi.jpaju.seating
+package fi.jpaju.restaurant
 
 import sttp.client3.*
 import sttp.client3.ziojson.*
@@ -12,29 +12,29 @@ import java.time.*
   *
   * API docs: http://gol-api-doc.s3-website-eu-west-1.amazonaws.com/#introduction
   */
-case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends AvailableSeatsService:
-  import TableOnlineSeatsService.*
+case class TableOnlineIntegration(sttpBackend: SttpBackend[Task, Any]) extends TableService:
+  import TableOnlineIntegration.*
 
-  override def checkAvailableSeats(parameters: CheckSeatsParameters): UIO[SeatStatus] =
+  override def checkAvailableTables(parameters: CheckTablesParameters): UIO[TableStatus] =
     val response = fetchPeriods(parameters)
 
     response.flatMap {
       case PeriodsResponse(Nil, None) =>
-        ZIO.succeed(SeatStatus.NotAvailable)
+        ZIO.succeed(TableStatus.NotAvailable(parameters.restaurant))
 
       case PeriodsResponse(Nil, Some(nextAvailableDate)) =>
-        val parametersWithNewDate = parameters.copy(from = nextAvailableDate)
-        checkAvailableSeats(parametersWithNewDate)
+        val parametersWithNewDate = parameters.copy(startingFrom = nextAvailableDate)
+        checkAvailableTables(parametersWithNewDate)
 
       case PeriodsResponse(periods, _) =>
-        val seats  = toAvailableSeats(periods, parameters.from)
-        val result = SeatStatus.Available(seats)
+        val tables = toAvailableTables(periods, parameters.startingFrom)
+        val result = TableStatus.Available(parameters.restaurant, tables)
         ZIO.succeed(result)
     }
 
-  private def fetchPeriods(parameters: CheckSeatsParameters): UIO[PeriodsResponse] =
-    val queryParams  = Map("persons" -> parameters.seats, "date" -> parameters.from.toString)
-    val restaurantId = parameters.restaurantId
+  private def fetchPeriods(parameters: CheckTablesParameters): UIO[PeriodsResponse] =
+    val queryParams  = Map("persons" -> parameters.persons, "date" -> parameters.startingFrom.toString)
+    val restaurantId = parameters.restaurant.id
     val url          = uri"https://service.tableonline.fi/public/r/$restaurantId/periods?$queryParams"
     val request      =
       basicRequest
@@ -47,26 +47,20 @@ case class TableOnlineSeatsService(sttpBackend: SttpBackend[Task, Any]) extends 
       .map(_.body)
       .orDie
 
-  private def toAvailableSeats(periods: List[Period], date: LocalDate) =
+  private def toAvailableTables(periods: List[Period], date: LocalDate): List[AvailableTable] =
     periods
       .flatMap { period =>
         period.hours.map { hour =>
-          SeatCount.make(period.persons).map(AvailableSeat(hour.time.atDate(date), _))
+          PersonCount.make(period.persons).map(AvailableTable(hour.time.atDate(date), _))
         }
       }
-      .collect { case Validation.Success(_, seats) => seats }
+      .collect { case Validation.Success(_, tables) => tables }
 
-object TableOnlineSeatsService:
+object TableOnlineIntegration:
   private case class PeriodsResponse(
       periods: List[Period],
       @jsonField("next_available_date") nextAvailableDate: Option[LocalDate]
-  ):
-    def toAvailableSeats(requestDate: LocalDate): List[Validation[String, AvailableSeat]] =
-      periods.flatMap { period =>
-        period.hours.map { hour =>
-          SeatCount.make(period.persons).map(AvailableSeat(hour.time.atDate(requestDate), _))
-        }
-      }
+  )
 
   private case class Period(persons: Int, hours: List[Hour])
   private case class Hour(time: LocalTime)
@@ -75,4 +69,4 @@ object TableOnlineSeatsService:
   private given JsonDecoder[Period]          = DeriveJsonDecoder.gen[Period]
   private given JsonDecoder[PeriodsResponse] = DeriveJsonDecoder.gen[PeriodsResponse]
 
-  val layer = ZLayer.fromFunction(TableOnlineSeatsService.apply)
+  val layer = ZLayer.fromFunction(TableOnlineIntegration.apply)

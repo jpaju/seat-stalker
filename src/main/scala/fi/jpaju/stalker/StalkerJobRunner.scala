@@ -1,7 +1,7 @@
 package fi.jpaju.stalker
 
 import fi.jpaju.*
-import fi.jpaju.seating.*
+import fi.jpaju.restaurant.*
 import fi.jpaju.telegram.*
 import zio.*
 
@@ -9,38 +9,38 @@ import java.time.LocalDate
 
 case class StalkerJobDefinition(
     restaurant: Restaurant,
-    seatCount: SeatCount
+    persons: PersonCount
 )
 
 trait StalkerJobRunner:
   def runJob(jobDefinition: StalkerJobDefinition): UIO[Unit]
 
 case class LiveStalkerJobRunner(
-    seatsService: AvailableSeatsService,
+    tableService: TableService,
     telegramService: TelegramService
 ) extends StalkerJobRunner:
   def runJob(jobDefinition: StalkerJobDefinition): UIO[Unit] =
     for
-      now        <- Clock.localDateTime.map(_.toLocalDate)
-      _          <- ZIO.logDebug(s"Checking available seats for ${jobDefinition.restaurant.name} at $now")
-      seatStatus <- checkSeats(jobDefinition, now)
-      _          <- ZIO.logDebug(s"Found seats for ${jobDefinition.restaurant.name}: $seatStatus")
-      _          <- sendNotifications(jobDefinition.restaurant, seatStatus)
+      now         <- Clock.localDateTime.map(_.toLocalDate)
+      _           <- ZIO.logDebug(s"Checking available tables in ${jobDefinition.restaurant.name} at $now")
+      tableStatus <- checkTables(jobDefinition, now)
+      _           <- ZIO.logDebug(s"Found tables in ${jobDefinition.restaurant.name}: $tableStatus")
+      _           <- sendNotifications(jobDefinition.restaurant, tableStatus)
     yield ()
 
-  private def checkSeats(requirements: StalkerJobDefinition, when: LocalDate): UIO[SeatStatus] =
-    val checkSeatsParameters = CheckSeatsParameters(
-      requirements.restaurant.id,
-      when,
-      requirements.seatCount
+  private def checkTables(requirements: StalkerJobDefinition, when: LocalDate): UIO[TableStatus] =
+    val checkTablesParameters = CheckTablesParameters(
+      requirements.restaurant,
+      requirements.persons,
+      when
     )
 
-    seatsService.checkAvailableSeats(checkSeatsParameters)
+    tableService.checkAvailableTables(checkTablesParameters)
 
-  private def sendNotifications(restaurant: Restaurant, seatStatus: SeatStatus): UIO[Unit] =
-    seatStatus.availableSeats
-      .map { availableSeats =>
-        val message         = MessageFormatter.seatsAvailableMessage(restaurant, availableSeats)
+  private def sendNotifications(restaurant: Restaurant, tableStatus: TableStatus): UIO[Unit] =
+    tableStatus.availableTables
+      .map { availableTables =>
+        val message         = MessageFormatter.tablesAvailableMessage(restaurant, availableTables)
         val telegramMessage = ZIO
           .fromEither(TelegramMessageBody.make(message).toEither)
           .orDieWith(validationErrs =>
@@ -50,7 +50,7 @@ case class LiveStalkerJobRunner(
         val retryPolicy = Schedule.exponential(1.second) && Schedule.recurs(5)
         telegramMessage
           .flatMap(telegramService.sendMessage(_).retry(retryPolicy))
-          .tapError(err => ZIO.logError(s"Failed to notify about available seats: $availableSeats"))
+          .tapError(err => ZIO.logError(s"Failed to notify about available tables: $tableStatus"))
           .ignore
       }
       .getOrElse(ZIO.unit)

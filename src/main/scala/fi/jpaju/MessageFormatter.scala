@@ -1,6 +1,6 @@
 package fi.jpaju
 
-import fi.jpaju.seating.*
+import fi.jpaju.restaurant.*
 import fi.jpaju.telegram.*
 
 import java.time.format.DateTimeFormatter
@@ -8,13 +8,13 @@ import java.time.format.DateTimeFormatter
 object MessageFormatter:
   private val dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm d.M.yyyy");
 
-  def seatsAvailableMessage(restaurant: Restaurant, availableSeats: List[AvailableSeat]): String =
-    val seats = availableSeats
-      .map(formatAvailableSeat)
+  def tablesAvailableMessage(restaurant: Restaurant, availableTables: List[AvailableTable]): String =
+    val tables = availableTables
+      .map(formatAvailableTable)
       .mkString("\n - ")
 
-    s"Free seats available in ${restaurant.name} 🍔:\n - $seats"
+    s"Free tables available in ${restaurant.name} 🍔:\n - $tables"
 
-  private def formatAvailableSeat(seat: AvailableSeat): String =
-    val formattedTime = seat.time.format(dateTimeFormatter)
-    s"${seat.seatCount} seats at $formattedTime"
+  private def formatAvailableTable(table: AvailableTable): String =
+    val formattedTime = table.time.format(dateTimeFormatter)
+    s"Table for ${table.persons} at $formattedTime"

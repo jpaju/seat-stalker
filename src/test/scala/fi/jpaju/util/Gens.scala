@@ -1,7 +1,7 @@
 package fi.jpaju
 package util
 
-import fi.jpaju.seating.*
+import fi.jpaju.restaurant.*
 import fi.jpaju.stalker.*
 import fi.jpaju.telegram.*
 import zio.*
@@ -20,22 +20,22 @@ object Gens:
   val restaurant: Gen[Any, Restaurant] =
     (restaurantId <*> Gen.string.nonEmpty).map(Restaurant.apply)
 
-  val seatCount: Gen[Any, SeatCount] = Gen
+  val personCount: Gen[Any, PersonCount] = Gen
     .int(1, 100)
-    .map(SeatCount.make(_))
+    .map(PersonCount.make(_))
     .collectSuccess
 
-  val availableSeat: Gen[Any, AvailableSeat] =
-    (Gen.localDateTime <*> seatCount).map(AvailableSeat.apply)
+  val availableTable: Gen[Any, AvailableTable] =
+    (Gen.localDateTime <*> personCount).map(AvailableTable.apply)
 
   // =============================================== Services ===============================================
 
   val stalkerJobDefinition: Gen[Any, StalkerJobDefinition] =
-    (restaurant <*> seatCount).map(StalkerJobDefinition.apply)
+    (restaurant <*> personCount).map(StalkerJobDefinition.apply)
 
-  val checkSeatParameters: Gen[Any, CheckSeatsParameters] = (
-    restaurantId <*> Gen.localDate <*> seatCount
-  ).map(CheckSeatsParameters(_, _, _))
+  val checkTableParameters: Gen[Any, CheckTablesParameters] = (
+    restaurant <*> personCount <*> Gen.localDate
+  ).map(CheckTablesParameters(_, _, _))
 
   // =============================================== Telegram ===============================================
 
