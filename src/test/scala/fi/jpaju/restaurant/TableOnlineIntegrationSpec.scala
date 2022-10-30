@@ -13,30 +13,30 @@ import java.time.*
 object TableOnlineServiceSpec extends ZIOSpecDefault:
   override def spec = suite("TableOnlineServiceSpec")(
     test("make request with correct url and parameters") {
-      check(Gens.checkTableParameters) { (parameters) =>
-        val recordingBackend = new RecordingSttpBackend(
-          AsyncHttpClientZioBackend.stub.whenAnyRequest
-            .thenRespond(noTablesAvailableJson)
-        )
+      val recordingBackend = new RecordingSttpBackend(
+        AsyncHttpClientZioBackend.stub.whenAnyRequest
+          .thenRespond(noTablesAvailableJson)
+      )
 
-        def assertCorrectRequest(request: Request[?, ?]): TestResult =
-          val uri                                      = request.uri
-          val expectedQueryParams: Map[String, String] = Map(
-            "persons" -> parameters.persons.toString,
-            "date"    -> parameters.startingFrom.toString
-          )
+      val parameters = CheckTablesParameters(
+        restaurant = Restaurant(RestaurantId("42"), "The restaurant"),
+        persons = PersonCount(3),
+        startingFrom = LocalDate.parse("2021-01-01")
+      )
 
-          assert(uri.host)(equalTo(Some("service.tableonline.fi"))) &&
+      val expectedQueryParams: Map[String, String] = Map(
+        "persons" -> parameters.persons.toString,
+        "date"    -> parameters.startingFrom.toString
+      )
+
+      withTableOnlineService(recordingBackend) { service =>
+        for
+          _      <- service.checkAvailableTables(parameters).runDrain
+          request = recordingBackend.allInteractions.head._1
+          uri     = request.uri
+        yield assert(uri.host)(equalTo(Some("service.tableonline.fi"))) &&
           assert(uri.path)(equalTo(List("public", "r", parameters.restaurant.id, "periods"))) &&
           assert(uri.paramsMap)(equalTo(expectedQueryParams))
-        end assertCorrectRequest
-
-        withTableOnlineService(recordingBackend) { service =>
-          for
-            _      <- service.checkAvailableTables(parameters).runDrain
-            request = recordingBackend.allInteractions.head._1
-          yield assertCorrectRequest(request)
-        }
       }
     },
     test("when next_available_date is null, then returns emppty stream") {
@@ -100,7 +100,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
         yield assertTrue(result == expectedResult)
       }
     }
-  ) @@ timeout(10.seconds)
+  )
 
   // =============================================== Helpers ===============================================
 
