@@ -5,4 +5,5 @@ export fi.jpaju.util.{FakeTableService, FakeTelegramService}
 export fi.jpaju.util.{nonEmpty}
 
 export zio.test.Assertion.*
+export zio.test.TestAspect.*
 export sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend

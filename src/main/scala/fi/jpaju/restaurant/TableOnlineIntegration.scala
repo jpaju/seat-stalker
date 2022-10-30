@@ -5,6 +5,7 @@ import sttp.client3.ziojson.*
 import zio.*
 import zio.json.*
 import zio.prelude.*
+import zio.stream.*
 
 import java.time.*
 
@@ -15,32 +16,31 @@ import java.time.*
 case class TableOnlineIntegration(sttpBackend: SttpBackend[Task, Any]) extends TableService:
   import TableOnlineIntegration.*
 
-  override def checkAvailableTables(parameters: CheckTablesParameters): UIO[TableStatus] =
-    val response = fetchPeriods(parameters)
+  override def checkAvailableTables(parameters: CheckTablesParameters): UStream[AvailableTable] =
+    val responseStream = ZStream.fromZIO(fetchPeriods(parameters))
 
-    response.flatMap {
-      case PeriodsResponse(Nil, None) =>
-        ZIO.succeed(TableStatus.NotAvailable(parameters.restaurant))
+    responseStream.flatMap {
+      case PeriodsResponse(Nil, None) => ZStream.empty
 
       case PeriodsResponse(Nil, Some(nextAvailableDate)) =>
         val parametersWithNewDate = parameters.copy(startingFrom = nextAvailableDate)
         checkAvailableTables(parametersWithNewDate)
 
       case PeriodsResponse(periods, _) =>
-        val tables = toAvailableTables(periods, parameters.startingFrom)
-        val result = TableStatus.Available(parameters.restaurant, tables)
-        ZIO.succeed(result)
+        val tables                = toAvailableTables(periods, parameters.startingFrom)
+        val nextday               = parameters.startingFrom.plusDays(1)
+        val parametersWithNextDay = parameters.copy(startingFrom = nextday)
+        ZStream.fromIterable(tables) ++ checkAvailableTables(parametersWithNextDay)
     }
 
   private def fetchPeriods(parameters: CheckTablesParameters): UIO[PeriodsResponse] =
     val queryParams  = Map("persons" -> parameters.persons, "date" -> parameters.startingFrom.toString)
     val restaurantId = parameters.restaurant.id
     val url          = uri"https://service.tableonline.fi/public/r/$restaurantId/periods?$queryParams"
-    val request      =
-      basicRequest
-        .get(url)
-        .response(asJson[PeriodsResponse])
-        .responseGetRight
+    val request      = basicRequest
+      .get(url)
+      .response(asJson[PeriodsResponse])
+      .responseGetRight
 
     sttpBackend
       .send(request)

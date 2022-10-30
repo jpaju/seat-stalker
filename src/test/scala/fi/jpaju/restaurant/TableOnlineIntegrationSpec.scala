@@ -5,6 +5,7 @@ import sttp.client3.*
 import sttp.client3.testing.*
 import sttp.model.*
 import zio.*
+import zio.stream.*
 import zio.test.*
 
 import java.time.*
@@ -32,53 +33,52 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
 
         withTableOnlineService(recordingBackend) { service =>
           for
-            _      <- service.checkAvailableTables(parameters)
+            _      <- service.checkAvailableTables(parameters).runDrain
             request = recordingBackend.allInteractions.head._1
           yield assertCorrectRequest(request)
         }
       }
     },
-    test("when next_available_date is null, then returns TableStatus.NotAvailable") {
+    test("when next_available_date is null, then returns emppty stream") {
       val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest
         .thenRespond(noTablesAvailableJson)
 
       withTableOnlineService(sttpBackendStub) { service =>
-        for result <- service.checkAvailableTables(defaultParameters)
-        yield assertTrue(result == TableStatus.NotAvailable(defaultParameters.restaurant))
+        for results <- service.checkAvailableTables(defaultParameters).collectToList
+        yield assertTrue(results.isEmpty)
       }
     },
-    test("when periods available, then returns TableStatus.Available") {
+    test("when tables available for requested date, then they are returned") {
       val responseData = List(
         (PersonCount(2), LocalTime.parse("12:00:00")),
         (PersonCount(34), LocalTime.parse("21:30:00")),
         (PersonCount(12), LocalTime.parse("13:18:00"))
       )
 
-      val responseJson    = tablesAvailableNowJson(responseData)
-      val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest.thenRespond(responseJson)
+      val sttpBackendStub = AsyncHttpClientZioBackend.stub
+        .whenRequestMatchesPartial({
+          case r if queriedDateIs(r.uri, defaultParameters.startingFrom) =>
+            Response.ok(tablesAvailableNowJson(responseData))
+
+          case _ => Response.ok(noTablesAvailableJson)
+        })
 
       withTableOnlineService(sttpBackendStub) { service =>
-        val expectedResult = TableStatus.Available(
-          defaultParameters.restaurant,
-          responseData.map { (personCount, time) =>
-            AvailableTable(time.atDate(defaultParameters.startingFrom), personCount)
-          }
-        )
+        val expectedResult = responseData.map { (personCount, time) =>
+          AvailableTable(time.atDate(defaultParameters.startingFrom), personCount)
+        }
 
-        for result <- service.checkAvailableTables(defaultParameters)
+        for result <- service.checkAvailableTables(defaultParameters).runCollect.map(_.toList)
         yield assertTrue(result == expectedResult)
       }
     },
-    test("when no periods available but next_available_date is NOT null, fetch tables for that date") {
+    test("when no tables available for requested date, return next available tables after requested date") {
       val now        = LocalDate.parse("2021-03-01")
       val later      = LocalDate.parse("2021-03-05")
       val restaurant = Restaurant(RestaurantId("123"), "Test Restaurant")
       val parameters = CheckTablesParameters(restaurant, PersonCount(2), now)
 
       val nextAvailableTables = List(PersonCount(2) -> LocalTime.parse("12:00:00"))
-
-      def queriedDateIs(uri: Uri, date: LocalDate) =
-        uri.paramsMap.get("date").contains(date.toString)
 
       val sttpBackendStub = AsyncHttpClientZioBackend.stub
         .whenRequestMatchesPartial({
@@ -87,23 +87,29 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
 
           case r if queriedDateIs(r.uri, later) =>
             Response.ok(tablesAvailableNowJson(nextAvailableTables))
+
+          case _ => Response.ok(noTablesAvailableJson)
         })
 
       withTableOnlineService(sttpBackendStub) { service =>
-        val expectedResult = TableStatus.Available(
-          restaurant,
-          nextAvailableTables.map { (personCount, time) =>
-            AvailableTable(time.atDate(later), personCount)
-          }
-        )
+        val expectedResult = nextAvailableTables.map { (personCount, time) =>
+          AvailableTable(time.atDate(later), personCount)
+        }
 
-        for result <- service.checkAvailableTables(parameters)
+        for result <- service.checkAvailableTables(parameters).collectToList
         yield assertTrue(result == expectedResult)
       }
     }
-  )
+  ) @@ timeout(10.seconds)
 
   // =============================================== Helpers ===============================================
+
+  private def queriedDateIs(uri: Uri, date: LocalDate) =
+    uri.paramsMap.get("date").contains(date.toString)
+
+  extension [A](stream: UStream[A])
+    def collectToList: ZIO[Any, Throwable, List[A]] =
+      stream.runCollect.map(_.toList)
 
   private def withTableOnlineService[R, E, A](sttpBackend: SttpBackend[Task, Any])(
       f: TableService => ZIO[R & SttpBackend[Task, Any], E, A]
@@ -118,6 +124,8 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       PersonCount(2),
       LocalDate.parse("2021-03-01")
     )
+
+  // ============================================ Response JSON ============================================
 
   private def tablesAvailableNowJson(periods: List[(PersonCount, LocalTime)]): String =
     def singlePeriodJson(persons: PersonCount, time: LocalTime): String = s"""

@@ -13,7 +13,7 @@ object Gens:
   // ============================================== Restaurant ==============================================
 
   val restaurantId: Gen[Any, RestaurantId] =
-    Gen.string.nonEmpty
+    Gen.alphaNumericString.nonEmpty
       .map(RestaurantId.make(_))
       .collectSuccess
 

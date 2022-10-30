@@ -4,6 +4,7 @@ package stalker
 import fi.jpaju.restaurant.*
 import fi.jpaju.telegram.*
 import zio.*
+import zio.stream.*
 import zio.test.Assertion.*
 import zio.test.*
 
@@ -16,7 +17,7 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
         for
           service      <- ZIO.service[StalkerJobRunner]
           _            <- service.runJob(jobDefinition)
-          sentMessages <- getSentTelegramMessages
+          sentMessages <- FakeTelegramService.getSentMessages
         yield assertTrue(sentMessages.isEmpty)
       }
     },
@@ -24,27 +25,36 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
       val availableTablesGen = Gen.listOfBounded(1, 50)(Gens.availableTable)
 
       check(Gens.stalkerJobDefinition, availableTablesGen) { (jobDefinitions, availableTable) =>
-        val tableStatus = TableStatus.Available(jobDefinitions.restaurant, availableTable)
+        val availableTables = Map(jobDefinitions.restaurant.id -> ZStream.fromIterable(availableTable))
 
         for
-          _            <- setAvailableTables(Map(jobDefinitions.restaurant.id -> tableStatus))
+          _            <- FakeTableService.setAvailableTables(availableTables)
           service      <- ZIO.service[StalkerJobRunner]
           _            <- service.runJob(jobDefinitions)
-          sentMessages <- getSentTelegramMessages <* resetSentTelegramMessages
+          sentMessages <- FakeTelegramService.getSentMessages <* FakeTelegramService.resetSentMessages
         yield assertTrue(sentMessages.size == 1)
+      }
+    },
+    test("should notify only about the first ten available tables") {
+      check(Gens.stalkerJobDefinition, Gens.availableTable) { (jobDefinition, availableTable) =>
+        val infiniteAvailableTables = ZStream.repeat(availableTable)
+        val availableTables         = Map(jobDefinition.restaurant.id -> infiniteAvailableTables)
+
+        for
+          _            <- FakeTableService.setAvailableTables(availableTables)
+          service      <- ZIO.service[StalkerJobRunner]
+          _            <- service.runJob(jobDefinition)
+          sentMessages <- FakeTelegramService.getSentMessages
+
+          // Definetely not the best way to test how many tables were sent, but works for now
+          msgLineCount = sentMessages.headOption.map(_.split("\n").length).getOrElse(0)
+          tolerance    = 3
+        yield assertTrue(msgLineCount < 10 + tolerance)
       }
     }
   ).provide(
     LiveStalkerJobRunner.layer,
     FakeTelegramService.layer,
-    FakeTableService.layer
+    FakeTableService.layer,
+    Runtime.removeDefaultLoggers
   )
-
-  private def getSentTelegramMessages: URIO[FakeTelegramService, List[TelegramMessageBody]] =
-    ZIO.serviceWithZIO[FakeTelegramService](_.ref.get)
-
-  private def resetSentTelegramMessages: URIO[FakeTelegramService, Unit] =
-    ZIO.serviceWithZIO[FakeTelegramService](_.ref.set(List.empty))
-
-  private def setAvailableTables(statuses: Map[RestaurantId, TableStatus]): URIO[FakeTableService, Unit] =
-    ZIO.serviceWithZIO[FakeTableService](_.tables.set(statuses))

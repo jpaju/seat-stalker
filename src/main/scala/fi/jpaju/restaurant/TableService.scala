@@ -1,6 +1,6 @@
 package fi.jpaju.restaurant
 
-import zio.*
+import zio.stream.*
 
 import java.time.*
 
@@ -11,4 +11,4 @@ case class CheckTablesParameters(
 )
 
 trait TableService:
-  def checkAvailableTables(parameters: CheckTablesParameters): UIO[TableStatus]
+  def checkAvailableTables(parameters: CheckTablesParameters): UStream[AvailableTable]

@@ -35,7 +35,16 @@ case class LiveStalkerJobRunner(
       when
     )
 
-    tableService.checkAvailableTables(checkTablesParameters)
+    val maxTables = 10
+    tableService
+      .checkAvailableTables(checkTablesParameters)
+      .take(maxTables)
+      .runCollect
+      .map { tables =>
+        if tables.isEmpty then TableStatus.NotAvailable(requirements.restaurant)
+        else TableStatus.Available(requirements.restaurant, tables.toList)
+      }
+  end checkTables
 
   private def sendNotifications(restaurant: Restaurant, tableStatus: TableStatus): UIO[Unit] =
     tableStatus.availableTables
