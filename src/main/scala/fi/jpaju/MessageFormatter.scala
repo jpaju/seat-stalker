@@ -17,4 +17,4 @@ object MessageFormatter:
 
   private def formatAvailableTable(table: AvailableTable): String =
     val formattedTime = table.time.format(dateTimeFormatter)
-    s"Table for ${table.persons} at $formattedTime"
+    s"Table for ${table.persons} on $formattedTime"

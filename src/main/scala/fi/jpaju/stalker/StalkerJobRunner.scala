@@ -1,5 +1,6 @@
 package fi.jpaju.stalker
 
+import fi.jpaju.Logging
 import fi.jpaju.*
 import fi.jpaju.restaurant.*
 import fi.jpaju.telegram.*
@@ -20,16 +21,19 @@ case class LiveStalkerJobRunner(
     telegramService: TelegramService
 ) extends StalkerJobRunner:
   def runJob(jobDefinition: StalkerJobDefinition): UIO[Unit] =
-    for
-      now         <- Clock.localDateTime.map(_.toLocalDate)
-      _           <- ZIO.log(s"Checking available tables in ${jobDefinition.restaurant.name} at $now")
-      tableStatus <- checkTables(jobDefinition, now)
-      _           <- tableStatus.fold(
-                       whenAvailable = (restaurant, tables) =>
-                         ZIO.log(s"Found tables in ${restaurant.name}: $tables") *> sendNotifications(restaurant, tables),
-                       whenNotAvailable = restaurant => ZIO.log(s"No available tables were found in ${restaurant.name}")
-                     )
-    yield ()
+    val spanName = s"stalker-job-${jobDefinition.restaurant.name}-${jobDefinition.persons}"
+    ZIO.logSpan(Logging.formatLogSpanName(spanName)) {
+      for
+        today       <- Clock.localDateTime.map(_.toLocalDate)
+        _           <- ZIO.log(s"Checking available tables in ${jobDefinition.restaurant.name} from $today")
+        tableStatus <- checkTables(jobDefinition, today)
+        _           <- tableStatus.fold(
+                         whenAvailable = (restaurant, tables) =>
+                           ZIO.log(s"Found tables in ${restaurant.name}: $tables") *> sendNotifications(restaurant, tables),
+                         whenNotAvailable = restaurant => ZIO.log(s"No available tables were found in ${restaurant.name}")
+                       )
+      yield ()
+    }
 
   private def checkTables(requirements: StalkerJobDefinition, when: LocalDate): UIO[TableStatus] =
     val checkTablesParameters = CheckTablesParameters(

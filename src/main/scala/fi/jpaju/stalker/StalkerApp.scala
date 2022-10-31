@@ -17,10 +17,10 @@ object StalkerApp:
 
   val app =
     for
-      _       <- ZIO.log("Seat stalker started")
-      service <- ZIO.service[StalkerJobRunner]
-      _       <- ZIO.foreachPar(jobDefinitions)(service.runJob)
-      _       <- ZIO.log("Seat stalker finished successfully")
+      _             <- ZIO.log("Seat stalker started")
+      service       <- ZIO.service[StalkerJobRunner]
+      (duration, _) <- ZIO.foreachPar(jobDefinitions)(service.runJob).timed
+      _             <- ZIO.log(s"Seat stalker finished successfully, took ${duration.toMillis} ms")
     yield ()
 
   val run =

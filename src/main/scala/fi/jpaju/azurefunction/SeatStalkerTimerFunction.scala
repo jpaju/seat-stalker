@@ -3,6 +3,7 @@ package fi.jpaju.azurefunction
 import com.microsoft.azure.functions.ExecutionContext
 import com.microsoft.azure.functions.annotation.FunctionName
 import com.microsoft.azure.functions.annotation.TimerTrigger
+import fi.jpaju.Logging
 import fi.jpaju.stalker.StalkerApp
 import zio.*
 
@@ -18,5 +19,5 @@ class SeatStalkerTimerFunction:
     val program = ZIO.log(s"Timer triggered, TimerInfo: $timerInfo") *> StalkerApp.run
 
     ZIOAppRunner.runThrowOnError(
-      program.provide(Logging.azFunLoggerLayer(context.getLogger))
+      program.provide(Logging.azFunctionLoggerLayer(context.getLogger))
     )

@@ -17,6 +17,7 @@ scalacOptions ++= Seq(
 
 val zioVersion        = "2.0.2"
 val zioConfigVersion  = "3.0.2"
+val zioLoggingVersion = "2.1.3"
 val zioJsonVersion    = "0.3.0"
 val zioPreludeversion = "1.0.0-RC16"
 val sttpVersion       = "3.8.3"
@@ -26,6 +27,7 @@ libraryDependencies ++= Seq(
   "dev.zio"                       %% "zio"                          % zioVersion,
   "dev.zio"                       %% "zio-json"                     % zioJsonVersion,
   "dev.zio"                       %% "zio-prelude"                  % zioPreludeversion,
+  "dev.zio"                       %% "zio-logging"                  % zioLoggingVersion,
   "dev.zio"                       %% "zio-config"                   % zioConfigVersion,
   "dev.zio"                       %% "zio-config-magnolia"          % zioConfigVersion,
   "com.softwaremill.sttp.client3" %% "core"                         % sttpVersion,
