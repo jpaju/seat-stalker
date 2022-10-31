@@ -11,14 +11,16 @@ object Logging:
 
   def azLoggerToZIO(azLogger: Logger): ZLogger[String, Unit] =
     def getLogFn(level: LogLevel): String => Unit =
+      import LogLevel.*
       level match
-        case LogLevel.Trace   => azLogger.finest
-        case LogLevel.Debug   => azLogger.finer
-        case LogLevel.Info    => azLogger.info
-        case LogLevel.Warning => azLogger.warning
-        case LogLevel.Error   => azLogger.severe
-        case LogLevel.Fatal   => azLogger.severe
-        case _                => _ => ()
+        case All     => azLogger.finest
+        case Trace   => azLogger.finer
+        case Debug   => azLogger.fine
+        case Info    => azLogger.info
+        case Warning => azLogger.warning
+        case Error   => azLogger.severe
+        case Fatal   => azLogger.severe
+        case _       => _ => ()
 
     new ZLogger[Any, Unit]:
       override def apply(

@@ -24,7 +24,13 @@ enum TableStatus:
   case NotAvailable(restaurant: Restaurant)
   case Available(restaurant: Restaurant, tables: List[AvailableTable])
 
-  def availableTables: Option[List[AvailableTable]] =
+  def fold[A](whenNotAvailable: Restaurant => A, whenAvailable: (Restaurant, List[AvailableTable]) => A): A =
     this match
-      case Available(_, tables) => Some(tables)
-      case _                    => None
+      case NotAvailable(restaurant)      => whenNotAvailable(restaurant)
+      case Available(restaurant, tables) => whenAvailable(restaurant, tables)
+
+  def hasTables: Boolean =
+    fold(_ => false, (_, tables) => tables.nonEmpty)
+
+  def availableTables: Option[List[AvailableTable]] =
+    fold(_ => None, (_, tables) => Some(tables))
