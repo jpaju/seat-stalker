@@ -16,7 +16,7 @@ object TelegramServiceSpec extends ZIOSpecDefault:
         val chatId = telegramConfig.chatId
 
         val recordingBackend = new RecordingSttpBackend(
-          AsyncHttpClientZioBackend.stub.whenAnyRequest
+          HttpClientZioBackend.stub.whenAnyRequest
             .thenRespond(responseJsonBody(chatId))
         )
 
@@ -51,7 +51,7 @@ object TelegramServiceSpec extends ZIOSpecDefault:
         StatusCode.NotFound
       )
 
-      val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest
+      val sttpBackendStub = HttpClientZioBackend.stub.whenAnyRequest
         .thenRespond(badTokenResponse)
 
       check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
@@ -73,7 +73,7 @@ object TelegramServiceSpec extends ZIOSpecDefault:
         StatusCode.BadRequest
       )
 
-      val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest
+      val sttpBackendStub = HttpClientZioBackend.stub.whenAnyRequest
         .thenRespond(chatNotFoundResponse)
 
       check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>

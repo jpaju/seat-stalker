@@ -3,7 +3,6 @@ package fi.jpaju.stalker
 import fi.jpaju.*
 import fi.jpaju.restaurant.*
 import fi.jpaju.telegram.*
-import sttp.client3.asynchttpclient.zio.AsyncHttpClientZioBackend
 import sttp.client3.httpclient.zio.*
 import zio.*
 
@@ -28,7 +27,7 @@ object StalkerApp:
     app.provide(
       LiveStalkerJobRunner.layer,
       ApplicationConfig.layer,
-      AsyncHttpClientZioBackend.layer(),
+      HttpClientZioBackend.layer(),
       TableOnlineIntegration.layer,
       LiveTelegramService.layer
     )

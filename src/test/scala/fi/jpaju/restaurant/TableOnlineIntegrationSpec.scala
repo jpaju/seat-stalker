@@ -14,7 +14,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
   override def spec = suite("TableOnlineServiceSpec")(
     test("make request with correct url and parameters") {
       val recordingBackend = new RecordingSttpBackend(
-        AsyncHttpClientZioBackend.stub.whenAnyRequest
+        HttpClientZioBackend.stub.whenAnyRequest
           .thenRespond(noTablesAvailableJson)
       )
 
@@ -40,7 +40,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       }
     },
     test("when next_available_date is null, then returns emppty stream") {
-      val sttpBackendStub = AsyncHttpClientZioBackend.stub.whenAnyRequest
+      val sttpBackendStub = HttpClientZioBackend.stub.whenAnyRequest
         .thenRespond(noTablesAvailableJson)
 
       withTableOnlineService(sttpBackendStub) { service =>
@@ -55,7 +55,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
         (PersonCount(12), LocalTime.parse("13:18:00"))
       )
 
-      val sttpBackendStub = AsyncHttpClientZioBackend.stub
+      val sttpBackendStub = HttpClientZioBackend.stub
         .whenRequestMatchesPartial({
           case r if queriedDateIs(r.uri, defaultParameters.startingFrom) =>
             Response.ok(tablesAvailableNowJson(responseData))
@@ -80,7 +80,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
 
       val nextAvailableTables = List(PersonCount(2) -> LocalTime.parse("12:00:00"))
 
-      val sttpBackendStub = AsyncHttpClientZioBackend.stub
+      val sttpBackendStub = HttpClientZioBackend.stub
         .whenRequestMatchesPartial({
           case r if queriedDateIs(r.uri, now) =>
             Response.ok(tablesAvailableLaterJson(later))

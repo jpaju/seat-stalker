@@ -15,20 +15,23 @@ scalacOptions ++= Seq(
   "-Ysafe-init"
 ) ++ Seq("-source", "future")
 
-val zioVersion       = "2.0.2"
-val zioConfigVersion = "3.0.2"
-val sttpVersion      = "3.8.2"
+val zioVersion        = "2.0.2"
+val zioConfigVersion  = "3.0.2"
+val zioJsonVersion    = "0.3.0"
+val zioPreludeversion = "1.0.0-RC16"
+val sttpVersion       = "3.8.3"
+val azFunctionVersion = "2.0.1"
 
 libraryDependencies ++= Seq(
-  "dev.zio"                       %% "zio"                           % zioVersion,
-  "dev.zio"                       %% "zio-json"                      % "0.3.0",
-  "dev.zio"                       %% "zio-prelude"                   % "1.0.0-RC16",
-  "dev.zio"                       %% "zio-config"                    % zioConfigVersion,
-  "dev.zio"                       %% "zio-config-magnolia"           % zioConfigVersion,
-  "com.softwaremill.sttp.client3" %% "core"                          % sttpVersion,
-  "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % sttpVersion,
-  "com.softwaremill.sttp.client3" %% "zio-json"                      % sttpVersion,
-  "com.microsoft.azure.functions"  % "azure-functions-java-library"  % "2.0.1"
+  "dev.zio"                       %% "zio"                          % zioVersion,
+  "dev.zio"                       %% "zio-json"                     % zioJsonVersion,
+  "dev.zio"                       %% "zio-prelude"                  % zioPreludeversion,
+  "dev.zio"                       %% "zio-config"                   % zioConfigVersion,
+  "dev.zio"                       %% "zio-config-magnolia"          % zioConfigVersion,
+  "com.softwaremill.sttp.client3" %% "core"                         % sttpVersion,
+  "com.softwaremill.sttp.client3" %% "zio"                          % sttpVersion,
+  "com.softwaremill.sttp.client3" %% "zio-json"                     % sttpVersion,
+  "com.microsoft.azure.functions"  % "azure-functions-java-library" % azFunctionVersion
 )
 
 libraryDependencies ++= Seq(
