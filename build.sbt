@@ -23,25 +23,32 @@ val zioPreludeversion = "1.0.0-RC16"
 val sttpVersion       = "3.8.3"
 val azFunctionVersion = "2.0.1"
 
-libraryDependencies ++= Seq(
-  "dev.zio"                       %% "zio"                          % zioVersion,
-  "dev.zio"                       %% "zio-json"                     % zioJsonVersion,
-  "dev.zio"                       %% "zio-prelude"                  % zioPreludeversion,
-  "dev.zio"                       %% "zio-logging"                  % zioLoggingVersion,
-  "dev.zio"                       %% "zio-config"                   % zioConfigVersion,
-  "dev.zio"                       %% "zio-config-magnolia"          % zioConfigVersion,
-  "com.softwaremill.sttp.client3" %% "core"                         % sttpVersion,
-  "com.softwaremill.sttp.client3" %% "zio"                          % sttpVersion,
-  "com.softwaremill.sttp.client3" %% "zio-json"                     % sttpVersion,
-  "com.microsoft.azure.functions"  % "azure-functions-java-library" % azFunctionVersion
-)
+lazy val root = (project in file("."))
+  .settings(
+    libraryDependencies ++= Seq(
+      "dev.zio"                       %% "zio"                          % zioVersion,
+      "dev.zio"                       %% "zio-json"                     % zioJsonVersion,
+      "dev.zio"                       %% "zio-prelude"                  % zioPreludeversion,
+      "dev.zio"                       %% "zio-logging"                  % zioLoggingVersion,
+      "dev.zio"                       %% "zio-config"                   % zioConfigVersion,
+      "dev.zio"                       %% "zio-config-magnolia"          % zioConfigVersion,
+      "com.softwaremill.sttp.client3" %% "core"                         % sttpVersion,
+      "com.softwaremill.sttp.client3" %% "zio"                          % sttpVersion,
+      "com.softwaremill.sttp.client3" %% "zio-json"                     % sttpVersion,
+      "com.microsoft.azure.functions"  % "azure-functions-java-library" % azFunctionVersion
+    ),
+    libraryDependencies ++= Seq(
+      "dev.zio" %% "zio-test"          % zioVersion,
+      "dev.zio" %% "zio-test-sbt"      % zioVersion,
+      "dev.zio" %% "zio-test-magnolia" % zioVersion
+    ).map(_ % "test,it"),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+    Defaults.itSettings
+  )
+  .configs(DeepIntegrationTest)
 
-libraryDependencies ++= Seq(
-  "dev.zio" %% "zio-test"          % zioVersion,
-  "dev.zio" %% "zio-test-sbt"      % zioVersion,
-  "dev.zio" %% "zio-test-magnolia" % zioVersion
-).map(_ % Test)
-testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+lazy val DeepIntegrationTest =
+  IntegrationTest.extend(Test) // Required for bloop https://github.com/scalacenter/bloop/issues/1162
 
 assembly / assemblyOutputPath    := baseDirectory.value / "azure-functions" / "seat-stalker.jar"
 assembly / assemblyMergeStrategy := {
