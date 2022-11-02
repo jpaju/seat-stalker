@@ -15,7 +15,7 @@ scalacOptions ++= Seq(
   "-Ysafe-init"
 ) ++ Seq("-source", "future")
 
-val zioVersion        = "2.0.2"
+val zioVersion        = "2.0.3"
 val zioConfigVersion  = "3.0.2"
 val zioLoggingVersion = "2.1.3"
 val zioJsonVersion    = "0.3.0"
@@ -37,9 +37,9 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "dev.zio" %% "zio-test"          % "2.0.2",
-  "dev.zio" %% "zio-test-sbt"      % "2.0.2",
-  "dev.zio" %% "zio-test-magnolia" % "2.0.2"
+  "dev.zio" %% "zio-test"          % zioVersion,
+  "dev.zio" %% "zio-test-sbt"      % zioVersion,
+  "dev.zio" %% "zio-test-magnolia" % zioVersion
 ).map(_ % Test)
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
@@ -47,6 +47,6 @@ assembly / assemblyOutputPath    := baseDirectory.value / "azure-functions" / "s
 assembly / assemblyMergeStrategy := {
   case x if x.contains("io.netty.versions.properties") => MergeStrategy.discard
   case x                                               =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
 }
