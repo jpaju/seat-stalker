@@ -59,13 +59,12 @@ case class LiveStalkerJobRunner(
       .fromEither(TelegramMessageBody.make(message).toEither)
       .orDieWith(validationErrs => new RuntimeException(s"Telegram message was nonempty: ${validationErrs.toString}"))
 
-    val retryPolicy = Schedule.exponential(1.second) && Schedule.recurs(5)
     telegramMessage
-      .flatMap(telegramService.sendMessage(_).retry(retryPolicy))
+      .flatMap(telegramService.sendMessage(_))
       .tapError(err =>
         ZIO.logError(s"Encountered an error: $err, when trying to notify about tables: $availableTables")
       )
-      .ignore
+      .orDieWith(err => new RuntimeException(s"Failed to notify about available tables: $err"))
 
 object LiveStalkerJobRunner:
   val layer = ZLayer.fromFunction(LiveStalkerJobRunner.apply)

@@ -4,19 +4,40 @@ package util
 import fi.jpaju.telegram.*
 import zio.*
 
-case class FakeTelegramService(ref: Ref[List[TelegramMessageBody]]) extends TelegramService:
-  def sendMessage(message: TelegramMessageBody): UIO[Unit] =
-    ref.update(_ :+ message)
+type MessageFunction = TelegramMessageBody => IO[MessageDeliveryError, Unit]
+
+/** Fake Telegram service that can be used for testing purposes. Collects sent messages and allows to customize how the
+  * service reactts to messages being sent.
+  *
+  * @param msgFunction
+  *   Reference to function that is used to compute the result of sending a message.
+  */
+case class FakeTelegramService(
+    msgFunction: Ref[MessageFunction],
+    messages: Ref[List[TelegramMessageBody]]
+) extends TelegramService:
+  def sendMessage(message: TelegramMessageBody): IO[MessageDeliveryError, Unit] =
+    for
+      _  <- messages.update(_ :+ message)
+      fn <- msgFunction.get
+      _  <- fn(message)
+    yield ()
 
 object FakeTelegramService:
   def getSentMessages: URIO[FakeTelegramService, List[TelegramMessageBody]] =
-    ZIO.serviceWithZIO[FakeTelegramService](_.ref.get)
+    ZIO.serviceWithZIO[FakeTelegramService](_.messages.get)
 
   def resetSentMessages: URIO[FakeTelegramService, Unit] =
-    ZIO.serviceWithZIO[FakeTelegramService](_.ref.set(List.empty))
+    ZIO.serviceWithZIO[FakeTelegramService](_.messages.set(List.empty))
+
+  def setSendMessageFunction(fn: MessageFunction): URIO[FakeTelegramService, Unit] =
+    ZIO.serviceWithZIO[FakeTelegramService](_.msgFunction.set(fn))
 
   val layer = ZLayer.fromZIO {
-    Ref
-      .make(List.empty[TelegramMessageBody])
-      .map(FakeTelegramService.apply)
+    val defaultFunction: MessageFunction = msg => ZIO.unit
+
+    for
+      messages <- Ref.make(List.empty[TelegramMessageBody])
+      msgFn    <- Ref.make(defaultFunction)
+    yield FakeTelegramService(msgFn, messages)
   }
