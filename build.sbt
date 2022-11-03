@@ -15,7 +15,7 @@ scalacOptions ++= Seq(
   "-Ysafe-init"
 ) ++ Seq("-source", "future")
 
-val zioVersion        = "2.0.3"
+val zioVersion        = "2.0.2"
 val zioConfigVersion  = "3.0.2"
 val zioLoggingVersion = "2.1.3"
 val zioJsonVersion    = "0.3.0"
