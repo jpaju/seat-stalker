@@ -6,7 +6,7 @@ import fi.jpaju.restaurant.*
 import fi.jpaju.telegram.*
 import zio.*
 
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 case class StalkerJobDefinition(
     restaurant: Restaurant,
@@ -24,7 +24,7 @@ case class LiveStalkerJobRunner(
     val spanName = s"stalker-job-${jobDefinition.restaurant.name}-${jobDefinition.persons}"
     ZIO.logSpan(Logging.formatLogSpanName(spanName)) {
       for
-        today       <- Clock.localDateTime.map(_.toLocalDate)
+        today       <- Clock.localDateTime
         _           <- ZIO.log(s"Checking available tables in ${jobDefinition.restaurant.name} from $today")
         tableStatus <- checkTables(jobDefinition, today)
         _           <- tableStatus.fold(
@@ -35,7 +35,7 @@ case class LiveStalkerJobRunner(
       yield ()
     }
 
-  private def checkTables(requirements: StalkerJobDefinition, when: LocalDate): UIO[TableStatus] =
+  private def checkTables(requirements: StalkerJobDefinition, when: LocalDateTime): UIO[TableStatus] =
     val checkTablesParameters = CheckTablesParameters(
       requirements.restaurant,
       requirements.persons,

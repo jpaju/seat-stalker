@@ -4,7 +4,7 @@ import sttp.client3.*
 import sttp.client3.ziojson.*
 import zio.*
 import zio.json.*
-import zio.prelude.*
+import zio.prelude.Validation
 import zio.stream.*
 
 import java.time.*
@@ -23,7 +23,7 @@ case class TableOnlineIntegration(sttpBackend: SttpBackend[Task, Any]) extends T
       case PeriodsResponse(Nil, None) => ZStream.empty
 
       case PeriodsResponse(Nil, Some(nextAvailableDate)) =>
-        val parametersWithNewDate = parameters.copy(startingFrom = nextAvailableDate)
+        val parametersWithNewDate = parameters.copy(startingFrom = nextAvailableDate.atStartOfDay)
         checkAvailableTables(parametersWithNewDate)
 
       case PeriodsResponse(periods, _) =>
@@ -34,7 +34,8 @@ case class TableOnlineIntegration(sttpBackend: SttpBackend[Task, Any]) extends T
     }
 
   private def fetchPeriods(parameters: CheckTablesParameters): UIO[PeriodsResponse] =
-    val queryParams  = Map("persons" -> parameters.persons, "date" -> parameters.startingFrom.toString)
+    val date         = parameters.startingFrom.toLocalDate
+    val queryParams  = Map("persons" -> parameters.persons, "date" -> date.toString)
     val restaurantId = parameters.restaurant.id
     val url          = uri"https://service.tableonline.fi/public/r/$restaurantId/periods?$queryParams"
     val request      = basicRequest
@@ -47,12 +48,20 @@ case class TableOnlineIntegration(sttpBackend: SttpBackend[Task, Any]) extends T
       .map(_.body)
       .orDie
 
-  private def toAvailableTables(periods: List[Period], date: LocalDate): List[AvailableTable] =
+  private def toAvailableTables(periods: List[Period], dateTime: LocalDateTime): List[AvailableTable] =
+    val minTime = dateTime.toLocalTime
+    val date    = dateTime.toLocalDate
+
+    import math.Ordered.orderingToOrdered
+    given Ordering[LocalTime] = Ordering.by(_.toSecondOfDay)
+
     periods
       .flatMap { period =>
-        period.hours.map { hour =>
-          PersonCount.make(period.persons).map(AvailableTable(hour.time.atDate(date), _))
-        }
+        period.hours
+          .filter(_.time >= minTime)
+          .map { hour =>
+            PersonCount.make(period.persons).map(AvailableTable(hour.time.atDate(date), _))
+          }
       }
       .collect { case Validation.Success(_, tables) => tables }
 

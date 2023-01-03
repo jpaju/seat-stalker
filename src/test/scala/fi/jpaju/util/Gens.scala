@@ -34,7 +34,7 @@ object Gens:
     (restaurant <*> personCount).map(StalkerJobDefinition.apply)
 
   val checkTableParameters: Gen[Any, CheckTablesParameters] = (
-    restaurant <*> personCount <*> Gen.localDate
+    restaurant <*> personCount <*> Gen.localDateTime
   ).map(CheckTablesParameters(_, _, _))
 
   // =============================================== Telegram ===============================================
