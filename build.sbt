@@ -3,7 +3,7 @@ watchBeforeCommand            := Watch.clearScreen
 
 name         := "seat-stalker"
 version      := "0.1.0-SNAPSHOT"
-scalaVersion := "3.2.0"
+scalaVersion := "3.2.1"
 
 scalacOptions ++= Seq(
   "-deprecation",
@@ -15,12 +15,12 @@ scalacOptions ++= Seq(
   "-Ysafe-init"
 ) ++ Seq("-source", "future")
 
-val zioVersion        = "2.0.2"
+val zioVersion        = "2.0.5"
 val zioConfigVersion  = "3.0.2"
 val zioLoggingVersion = "2.1.3"
-val zioJsonVersion    = "0.3.0"
+val zioJsonVersion    = "0.4.2"
 val zioPreludeversion = "1.0.0-RC16"
-val sttpVersion       = "3.8.3"
+val sttpVersion       = "3.8.6"
 val azFunctionVersion = "2.0.1"
 
 lazy val root = (project in file("."))
@@ -42,7 +42,6 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-test-sbt"      % zioVersion,
       "dev.zio" %% "zio-test-magnolia" % zioVersion
     ).map(_ % "test,it"),
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     Defaults.itSettings
   )
   .configs(DeepIntegrationTest)
