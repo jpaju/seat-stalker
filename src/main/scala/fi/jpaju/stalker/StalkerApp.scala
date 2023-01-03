@@ -49,9 +49,14 @@ object LiveStalkerApp:
 
 object StalkerApp:
   // Hard code desired reastaurants for now
-  val kaskis      = Restaurant(RestaurantId("291"), "Kaskis")
-  val metsämäki   = Restaurant(RestaurantId("1286"), "Ravintola Metsämäki")
-  val restaurants = Set(kaskis, metsämäki)
-  val jobs        = restaurants.map(StalkerJobDefinition(_, PersonCount(2)))
+  val kaskis            = Restaurant(RestaurantId("291"), "Kaskis")
+  val metsämäki         = Restaurant(RestaurantId("1286"), "Ravintola Metsämäki")
+  val theBullAndTheFirm = Restaurant(RestaurantId("911"), "The Bull and the Firm")
+
+  val jobs = Set(
+    StalkerJobDefinition(kaskis, PersonCount(2)),
+    StalkerJobDefinition(metsämäki, PersonCount(2)),
+    StalkerJobDefinition(theBullAndTheFirm, PersonCount(6))
+  )
 
   val hardcodedJobsRepositoryLayer = InMemoryStalkerJobRepository.layerFromJobs(jobs)

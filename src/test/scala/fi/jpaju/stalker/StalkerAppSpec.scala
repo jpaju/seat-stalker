@@ -13,7 +13,7 @@ object StalkerAppSpec extends ZIOSpecDefault:
   val job3    = StalkerJobDefinition(Restaurant(RestaurantId("3"), "Test3"), PersonCount(3))
   val allJobs = Set(job1, job2, job3)
 
-  override def spec = suite("StalkerJobRunnerSpec")(
+  override def spec = suite("StalkerAppSpec")(
     test("when all jobs run successfully, then app should exit with success") {
       val jobResults = Map(
         job1 -> ZIO.unit,
