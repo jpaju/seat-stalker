@@ -1,13 +1,8 @@
 package fi.jpaju
 package stalker
 
-import fi.jpaju.*
 import fi.jpaju.restaurant.*
-import fi.jpaju.telegram.*
-import sttp.client3.httpclient.zio.*
 import zio.*
-
-import java.time.LocalDate
 
 case class RunSuccesses(jobCount: Int, duration: Duration)
 case class RunErrors(failures: Set[Cause[Nothing]])

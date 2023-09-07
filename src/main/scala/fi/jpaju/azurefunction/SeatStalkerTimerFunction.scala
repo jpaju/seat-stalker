@@ -10,21 +10,18 @@ import fi.jpaju.telegram.*
 import sttp.client3.httpclient.zio.*
 import zio.*
 
-import java.time.LocalDate
-import java.util.Optional
+@FunctionName("SeatStalkerTimerFunction")
+def run(
+    @TimerTrigger(name = "timerInfo", schedule = "5 0 0 * * *") timerInfo: String,
+    context: ExecutionContext
+): Unit =
+  val program =
+    ZIO.log(s"Timer triggered, TimerInfo: $timerInfo") *>
+      ZIO.serviceWithZIO[StalkerApp](_.run)
 
-class SeatStalkerTimerFunction:
-  @FunctionName("SeatStalkerTimerFunction")
-  def run(
-      @TimerTrigger(name = "timerInfo", schedule = "5 0 0 * * *") timerInfo: String,
-      context: ExecutionContext
-  ): Unit =
-    val program =
-      ZIO.log(s"Timer triggered, TimerInfo: $timerInfo") *>
-        ZIO.serviceWithZIO[StalkerApp](_.run)
-
-    ZIOAppRunner.runThrowOnError(
-      program.provide(
+  ZIOAppRunner.runThrowOnError(
+    program
+      .provide(
         LiveStalkerApp.layer,
         LiveStalkerJobRunner.layer,
         StalkerApp.hardcodedJobsRepositoryLayer,
@@ -34,4 +31,5 @@ class SeatStalkerTimerFunction:
         LiveTelegramService.layer,
         Logging.azFunctionLoggerLayer(context.getLogger)
       )
-    )
+      .unit // This is for the compiler not to complain
+  )

@@ -7,8 +7,6 @@ import sttp.model.*
 import zio.*
 import zio.test.*
 
-import java.time.*
-
 object TelegramServiceSpec extends ZIOSpecDefault:
   override def spec = suite("TelegramServiceSpec")(
     test("when sending message, then Telegram API is called with correct parameters") {
@@ -87,7 +85,7 @@ object TelegramServiceSpec extends ZIOSpecDefault:
 
   // =============================================== Helpers ===============================================
 
-  private def responseJsonBody(chatId: String): String = s"""
+  private def responseJsonBody(@annotation.unused("used in tests") chatId: String): String = s"""
     {
         "ok": true,
         "result": {

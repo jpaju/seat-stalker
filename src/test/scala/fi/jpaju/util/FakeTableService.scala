@@ -6,6 +6,7 @@ import zio.*
 import zio.stream.*
 
 case class FakeTableService(tables: Ref[Map[RestaurantId, UStream[AvailableTable]]]) extends TableService:
+  @SuppressWarnings(Array("org.wartremover.warts.GetGetOrElse"))
   def checkAvailableTables(parameters: CheckTablesParameters): UStream[AvailableTable] =
     ZStream.fromZIO {
       tables.get.map(_.get(parameters.restaurant.id).getOrElse(ZStream.empty))

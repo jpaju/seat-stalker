@@ -3,25 +3,63 @@ watchBeforeCommand            := Watch.clearScreen
 
 name         := "seat-stalker"
 version      := "0.1.0-SNAPSHOT"
-scalaVersion := "3.2.1"
+scalaVersion := "3.3.0"
+
+// ===========================================================================================
+// COMPILER CONFIGURATION
+// ===========================================================================================
 
 scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-explain",
+  "-language:implicitConversions",
   "-Ycheck-all-patmat",
   "-Ycheck-reentrant",
   "-Ykind-projector",
   "-Ysafe-init"
 ) ++ Seq("-source", "future")
 
-val zioVersion        = "2.0.5"
-val zioConfigVersion  = "3.0.2"
-val zioLoggingVersion = "2.1.3"
-val zioJsonVersion    = "0.4.2"
-val zioPreludeversion = "1.0.0-RC16"
-val sttpVersion       = "3.8.6"
+// ===========================================================================================
+// LINTER CONFIGURATION
+// ===========================================================================================
+
+// Report all warnings as errors only on compile, not in e.g REPL or tests
+ThisBuild / scalacOptions ++= Seq(
+  "-Wvalue-discard",           // Warn when non-Unit expression results are unused
+  "-Wunused:all",              // Warn on unused imports, params, privates, locals, etc
+  "-Wconf:msg=unused:warning", // Set unused warnings to warning level
+  "-Wconf:any:error"           // Promote any other warnings to errors (i.e. treat warnings as errors, like -Xfatal-warnings)
+)
+
+// List of all warts: https://www.wartremover.org/doc/warts.html
+ThisBuild / wartremoverWarnings ++= Warts.allBut(
+  Wart.Any,
+  Wart.Equals,
+  Wart.ImplicitConversion,
+  Wart.ImplicitParameter,
+  Wart.Nothing,
+  Wart.Overloading,
+  Wart.Recursion,
+  Wart.FinalCaseClass,
+  Wart.ToString
+)
+
+// ===========================================================================================
+// DEPENDENCY VERSIONS
+// ===========================================================================================
+
+val zioVersion        = "2.0.16"
+val zioConfigVersion  = "3.0.7"
+val zioLoggingVersion = "2.1.14"
+val zioJsonVersion    = "0.6.2"
+val zioPreludeversion = "1.0.0-RC20"
+val sttpVersion       = "3.9.0"
 val azFunctionVersion = "2.0.1"
+
+// ===========================================================================================
+// PROJECT CONFIGURATION
+// ===========================================================================================
 
 lazy val root = (project in file("."))
   .settings(
@@ -48,6 +86,10 @@ lazy val root = (project in file("."))
 
 lazy val DeepIntegrationTest =
   IntegrationTest.extend(Test) // Required for bloop https://github.com/scalacenter/bloop/issues/1162
+
+// ===========================================================================================
+// PACKAGING/DEPLOYMENT CONFIGURATION
+// ===========================================================================================
 
 assembly / assemblyOutputPath    := baseDirectory.value / "azure-functions" / "seat-stalker.jar"
 assembly / assemblyMergeStrategy := {

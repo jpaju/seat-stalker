@@ -1,7 +1,6 @@
 package fi.jpaju
 
 import fi.jpaju.restaurant.*
-import fi.jpaju.telegram.*
 
 import java.time.format.DateTimeFormatter
 

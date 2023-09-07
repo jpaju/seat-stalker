@@ -1,16 +1,17 @@
 package fi.jpaju
 
 import zio.*
-import zio.logging.{LogFormat}
-import zio.logging.console
+import zio.logging.LogFilter
+import zio.logging.LogFormat
+import zio.logging.LogGroup
 
+import java.util.Locale
 import java.util.logging.Logger
-import zio.logging.{LogGroup, LogFilter}
 
 object Logging:
   def formatLogSpanName(name: String): String =
     name
-      .toLowerCase()
+      .toLowerCase(Locale.ENGLISH)
       .replaceAll("[\\s\\t\\n\\r]+", "_") // Replace whitespace with underscore
 
   def azFunctionLoggerLayer(logger: Logger) =

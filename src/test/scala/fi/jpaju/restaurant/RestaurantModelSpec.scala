@@ -2,7 +2,6 @@ package fi.jpaju
 package restaurant
 
 import zio.*
-import zio.prelude.Validation
 import zio.test.Assertion.*
 import zio.test.*
 

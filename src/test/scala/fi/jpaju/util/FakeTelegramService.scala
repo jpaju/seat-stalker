@@ -14,7 +14,7 @@ type MessageFunction = TelegramMessageBody => IO[MessageDeliveryError, Unit]
   */
 case class FakeTelegramService(
     msgFunction: Ref[MessageFunction],
-    messages: Ref[List[TelegramMessageBody]]
+    messages: Ref[Vector[TelegramMessageBody]]
 ) extends TelegramService:
   def sendMessage(message: TelegramMessageBody): IO[MessageDeliveryError, Unit] =
     for
@@ -24,11 +24,11 @@ case class FakeTelegramService(
     yield ()
 
 object FakeTelegramService:
-  def getSentMessages: URIO[FakeTelegramService, List[TelegramMessageBody]] =
+  def getSentMessages: URIO[FakeTelegramService, Vector[TelegramMessageBody]] =
     ZIO.serviceWithZIO[FakeTelegramService](_.messages.get)
 
   def resetSentMessages: URIO[FakeTelegramService, Unit] =
-    ZIO.serviceWithZIO[FakeTelegramService](_.messages.set(List.empty))
+    ZIO.serviceWithZIO[FakeTelegramService](_.messages.set(Vector.empty))
 
   def setSendMessageFunction(fn: MessageFunction): URIO[FakeTelegramService, Unit] =
     ZIO.serviceWithZIO[FakeTelegramService](_.msgFunction.set(fn))
@@ -37,7 +37,7 @@ object FakeTelegramService:
     val defaultFunction: MessageFunction = msg => ZIO.unit
 
     for
-      messages <- Ref.make(List.empty[TelegramMessageBody])
+      messages <- Ref.make(Vector.empty[TelegramMessageBody])
       msgFn    <- Ref.make(defaultFunction)
     yield FakeTelegramService(msgFn, messages)
   }
