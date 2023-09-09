@@ -3,7 +3,7 @@ watchBeforeCommand            := Watch.clearScreen
 
 name         := "seat-stalker"
 version      := "0.1.0-SNAPSHOT"
-scalaVersion := "3.3.0"
+scalaVersion := "3.3.1"
 
 // ===========================================================================================
 // COMPILER CONFIGURATION
@@ -26,7 +26,8 @@ scalacOptions ++= Seq(
 
 // Report all warnings as errors only on compile, not in e.g REPL or tests
 ThisBuild / scalacOptions ++= Seq(
-  "-Wvalue-discard",           // Warn when non-Unit expression results are unused
+  "-Wvalue-discard",           // Warn when function evaluates to value that is discarded (because return type is Unit)
+  "-Wnonunit-statement",       // Warn when non-Unit expression is in statement position
   "-Wunused:all",              // Warn on unused imports, params, privates, locals, etc
   "-Wconf:msg=unused:warning", // Set unused warnings to warning level
   "-Wconf:any:error"           // Promote any other warnings to errors (i.e. treat warnings as errors, like -Xfatal-warnings)
