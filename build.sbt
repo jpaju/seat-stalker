@@ -16,8 +16,8 @@ scalacOptions ++= Seq(
   "-language:implicitConversions",
   "-Ycheck-all-patmat",
   "-Ycheck-reentrant",
-  "-Ykind-projector",
-  "-Ysafe-init"
+  "-Xkind-projector",
+  "-Wsafe-init"
 ) ++ Seq("-source", "future")
 
 // ===========================================================================================
