@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v31
 
       - name: Build and run unit tests
         run: nix develop --command sbt test
@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v31
 
       - name: Build and run integration tests
         run: nix develop --command sbt IntegrationTest/test
