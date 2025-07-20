@@ -24,7 +24,7 @@ object IntegartionTestSpec extends ZIOSpecDefault:
       for
         _            <- ZIO.serviceWithZIO[StalkerJobRepository](_.saveJob(jobDefinition))
         _            <- FakeTableService.setAvailableTables(availableTables)
-        app          <- ZIO.serviceWithZIO[StalkerApp](_.run)
+        _            <- ZIO.serviceWithZIO[StalkerApp](_.run)
         sentMessages <- FakeTelegramService.getSentMessages
       yield assertTrue(sentMessages.map(_.toString) == List(expectedMessage))
     }

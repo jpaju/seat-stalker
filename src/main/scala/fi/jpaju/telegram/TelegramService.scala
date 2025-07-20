@@ -4,7 +4,6 @@ import sttp.client3.*
 import sttp.client3.ziojson.*
 import zio.*
 import zio.json.*
-import zio.prelude.Assertion.*
 
 trait TelegramService:
   def sendMessage(messageBody: TelegramMessageBody): IO[MessageDeliveryError, Unit]
