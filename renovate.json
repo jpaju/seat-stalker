@@ -7,6 +7,7 @@
   "prHourlyLimit": 20,
 
   "automerge": false,
+  "rebaseWhen": "behind-base-branch",
   "reviewers": ["jpaju"],
   "semanticCommits": "disabled"
 }
