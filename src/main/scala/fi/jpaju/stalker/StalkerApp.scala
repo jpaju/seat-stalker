@@ -43,7 +43,7 @@ object LiveStalkerApp:
   val layer = ZLayer.fromFunction(LiveStalkerApp.apply)
 
 object StalkerApp:
-  // Hard code desired reastaurants for now
+  // Hard code desired restaurants for now
   val kaskis    = Restaurant(RestaurantId("291"), "Kaskis")
   val metsämäki = Restaurant(RestaurantId("1286"), "Ravintola Metsämäki")
 

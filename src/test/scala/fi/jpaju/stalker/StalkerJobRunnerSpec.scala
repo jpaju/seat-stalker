@@ -37,7 +37,7 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
         _            <- service.runJob(jobDefinition)
         sentMessages <- FakeTelegramService.getSentMessages
 
-        // Definetely not the best way to test how many tables were sent, but works for now
+        // Definitely not the best way to test how many tables were sent, but works for now
         msgLineCount = sentMessages.headOption.map(_.split("\n").length).getOrElse(0)
         tolerance    = 3
       yield assertTrue(msgLineCount < 10 + tolerance)

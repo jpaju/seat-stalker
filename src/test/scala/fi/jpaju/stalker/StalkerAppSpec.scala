@@ -23,7 +23,7 @@ object StalkerAppSpec extends ZIOSpecDefault:
 
       FakeStalkerJobRunner.addResults(jobResults) *> assertStalkerAppExit(succeeds(anything))
     },
-    test("when any job fails, then app should exit non-succesfully") {
+    test("when any job fails, then app should exit non-successfully") {
       val jobResults = Map(
         job1 -> ZIO.unit,
         job2 -> ZIO.unit,
