@@ -58,7 +58,7 @@ val zioConfigVersion  = "3.0.7"
 val zioLoggingVersion = "2.1.14"
 val zioJsonVersion    = "0.6.2"
 val zioPreludeversion = "1.0.0-RC20"
-val sttpVersion       = "3.9.0"
+val sttpVersion       = "3.11.0"
 val azFunctionVersion = "2.2.0"
 
 // ===========================================================================================
