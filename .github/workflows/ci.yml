@@ -5,32 +5,33 @@ on:
   push:
   workflow_call:
 
+env:
+  # define Java options for both official sbt and sbt-extras
+  JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
+  JVM_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
+
 jobs:
   unit-test:
     runs-on: ubuntu-latest
-    env:
-      # define Java options for both official sbt and sbt-extras
-      JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
-      JVM_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Install Nix
         uses: cachix/install-nix-action@v22
+
       - name: Build and run unit tests
         run: nix develop --command sbt test
 
   integration-test:
     needs: unit-test
     runs-on: ubuntu-latest
-    env:
-      # define Java options for both official sbt and sbt-extras
-      JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
-      JVM_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Install Nix
         uses: cachix/install-nix-action@v22
+
       - name: Build and run integration tests
         run: nix develop --command sbt IntegrationTest/test
