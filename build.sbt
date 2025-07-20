@@ -3,7 +3,7 @@ watchBeforeCommand            := Watch.clearScreen
 
 name         := "seat-stalker"
 version      := "0.1.0-SNAPSHOT"
-scalaVersion := "3.3.1"
+scalaVersion := "3.3.6"
 
 // ===========================================================================================
 // COMPILER CONFIGURATION
@@ -45,6 +45,9 @@ ThisBuild / wartremoverWarnings ++= Warts.allBut(
   Wart.FinalCaseClass,
   Wart.ToString
 )
+
+// Disable for tests
+ThisBuild / wartremoverExcluded ++= Seq("test", "it").map(baseDirectory.value / "src" / _)
 
 // ===========================================================================================
 // DEPENDENCY VERSIONS
