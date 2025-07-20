@@ -31,11 +31,12 @@ case class LiveTelegramService(config: TelegramConfig, sttpBackend: SttpBackend[
       .send(request)
       .mapError(t => MessageDeliveryError("Network failure", t)) // Throwable indicates network failure
       .map(_.body)
-      .reject { case Left(errorResponse) => // Left indicates non 2xx response code
-        errorResponse.fold(
-          responseException => MessageDeliveryError("Response exception", responseException),
-          telegramErr => MessageDeliveryError("Telegram API error", telegramErr)
-        )
+      .reject {
+        case Left(errorResponse) => // Left indicates non 2xx response code
+          errorResponse.fold(
+            responseException => MessageDeliveryError("Response exception", responseException),
+            telegramErr => MessageDeliveryError("Telegram API error", telegramErr)
+          )
       }
 
     telegramApiResponse

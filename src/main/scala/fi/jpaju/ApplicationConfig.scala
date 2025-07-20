@@ -17,7 +17,7 @@ object ApplicationConfig:
   private val configSource    = ConfigSource.fromSystemEnv(keyDelimiter = keyDelimiter)
   private val lowerCaseSource =
     configSource.mapKeys(key => key.toLowerCase(Locale.ENGLISH)) // To combat some Azure madness
-  private val combinedSource = configSource <> lowerCaseSource
+  private val combinedSource  = configSource <> lowerCaseSource
 
   private val configLayer = ZLayer { read(configDescriptor.from(combinedSource)) }
   val layer               = configLayer.narrow(_.telegram)
