@@ -35,7 +35,6 @@ jobs:
         run: nix develop --command sbt test
 
   integration-test:
-    needs: unit-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
