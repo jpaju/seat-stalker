@@ -34,7 +34,7 @@ object FakeTelegramService:
     ZIO.serviceWithZIO[FakeTelegramService](_.msgFunction.set(fn))
 
   val layer = ZLayer.fromZIO {
-    val defaultFunction: MessageFunction = msg => ZIO.unit
+    val defaultFunction: MessageFunction = (_: TelegramMessageBody) => ZIO.unit
 
     for
       messages <- Ref.make(Vector.empty[TelegramMessageBody])

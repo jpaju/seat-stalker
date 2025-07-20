@@ -3,7 +3,7 @@ watchBeforeCommand            := Watch.clearScreen
 
 name         := "seat-stalker"
 version      := "0.1.0-SNAPSHOT"
-scalaVersion := "3.3.6"
+scalaVersion := "3.7.1"
 
 // ===========================================================================================
 // COMPILER CONFIGURATION
@@ -16,8 +16,8 @@ scalacOptions ++= Seq(
   "-language:implicitConversions",
   "-Ycheck-all-patmat",
   "-Ycheck-reentrant",
-  "-Ykind-projector",
-  "-Ysafe-init"
+  "-Xkind-projector",
+  "-Wsafe-init"
 ) ++ Seq("-source", "future")
 
 // ===========================================================================================

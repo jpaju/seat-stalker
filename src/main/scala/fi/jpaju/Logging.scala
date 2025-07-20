@@ -20,14 +20,14 @@ object Logging:
     Runtime.removeDefaultLoggers ++ Runtime.addLogger(loggerWithFormatting)
 
   private def javaLoggerToZLogger(javaLogger: Logger): ZLogger[String, Unit] = (
-      trace: Trace,
-      fiberId: FiberId,
+      _: Trace,
+      _: FiberId,
       logLevel: LogLevel,
       message: () => Any,
-      cause: Cause[Any],
-      context: FiberRefs,
-      spans: List[LogSpan],
-      annotations: Map[String, String]
+      _: Cause[Any],
+      _: FiberRefs,
+      _: List[LogSpan],
+      _: Map[String, String]
   ) =>
     val msg = message().toString
     logLevel match
