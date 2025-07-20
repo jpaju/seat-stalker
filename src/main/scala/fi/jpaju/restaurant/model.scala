@@ -15,7 +15,7 @@ object RestaurantId extends Subtype[String]:
   override inline def assertion = hasLength(greaterThan(0))
 
 type PersonCount = PersonCount.Type
-object PersonCount  extends Subtype[Int]:
+object PersonCount extends Subtype[Int]:
   override inline def assertion = greaterThan(0)
 
 case class AvailableTable(time: LocalDateTime, persons: PersonCount)
