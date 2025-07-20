@@ -41,3 +41,4 @@ null/
 *.env
 *.jar
 *local.settings.json
+.direnv
