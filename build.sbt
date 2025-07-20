@@ -53,7 +53,7 @@ ThisBuild / wartremoverExcluded ++= Seq("test", "it").map(baseDirectory.value / 
 // DEPENDENCY VERSIONS
 // ===========================================================================================
 
-val zioVersion        = "2.0.16"
+val zioVersion        = "2.1.19"
 val zioConfigVersion  = "3.0.7"
 val zioLoggingVersion = "2.1.14"
 val zioJsonVersion    = "0.6.2"
