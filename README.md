@@ -16,37 +16,30 @@ Application for notifying about free seats in popular restaurants. Uses telegram
 
 - [ ] [Dinnerbooking.com](https://www.dinnerbooking.com/)
 
-## Development environment
+## Development Environment
 
-The application could be run locally either using SBT or Azure Functions Core Tools. Both approaches require Telegram configuration in order to send notifications.
+### Prerequisites
+- Scala/SBT for building
+- Docker for local blob storage
+- Telegram bot token and chat ID
 
-### SBT
+### Configuration
+Create a `.env` file in the project root with your Telegram credentials:
+```
+telegram_chatId=<your-chat-id>
+telegram_token=<your-bot-token>
+```
 
-1. Create `.env` file to the root folder of the project and add the following configuration in it
-   ```
-   telegram_chatId=<chat-id>
-   telegram_token=<token>
-   ```
-2. Start SBT and run `run` command
+The `.env` file should be loaded into your environment. If using nix-direnv or dotenv, it will be loaded automatically.
 
-### Azure Functions
+### Running the Application
 
-1. Make sure [Azure Functions Core Tools (v4)](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local) are installed
-2. Start local blob storage emulator by running `docker compose up`
-3. Package the project into a jar file by running `sbt assembly`
+#### Option 1: Direct with SBT
+1. Run `sbt run`
+
+#### Option 2: Azure Functions (Local)
+1. Ensure [Azure Functions Core Tools (v4)](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local) are available (automatically included in nix dev shell)
+2. Start blob storage: `docker compose up`
+3. Build the application: `sbt assembly`
 4. Navigate to `azure-functions` folder
-5. Create configuration file `local.settings.json` and add the following configuration:
-
-   ```json
-   {
-     "IsEncrypted": false,
-     "Values": {
-       "AzureWebJobsStorage": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;",
-       "FUNCTIONS_WORKER_RUNTIME": "java",
-       "telegram_chatId": "<chat-id>",
-       "telegram_token": "<token>"
-     }
-   }
-   ```
-
-6. Run `func start`
+5. Start the function: `func start`

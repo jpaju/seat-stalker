@@ -10,7 +10,7 @@ import zio.test.*
 
 import java.time.*
 
-object IntegartionTestSpec extends ZIOSpecDefault:
+object IntegrationTestSpec extends ZIOSpecDefault:
   override def spec = suite("IntegrationTestSpec")(
     // TODO Use testcontainers/mockserver in order to send actual HTTP requests (TelegramService and TableService)
     // TODO Run the app by calling the SeatStalkerTimerFunction.run method
