@@ -19,15 +19,18 @@ Application for notifying about free seats in popular restaurants. Uses telegram
 ## Development Environment
 
 ### Prerequisites
+
 - Scala/SBT for building
 - Docker for local blob storage
 - Telegram bot token and chat ID
 
 ### Configuration
+
 Create a `.env` file in the project root with your Telegram credentials:
+
 ```
-telegram_chatId=<your-chat-id>
-telegram_token=<your-bot-token>
+TELEGRAM_CHATID=<your-chat-id>
+TELEGRAM_TOKEN=<your-bot-token>
 ```
 
 The `.env` file should be loaded into your environment. If using nix-direnv or dotenv, it will be loaded automatically.
@@ -35,9 +38,12 @@ The `.env` file should be loaded into your environment. If using nix-direnv or d
 ### Running the Application
 
 #### Option 1: Direct with SBT
-1. Run `sbt run`
+
+1. Ensure environment variables from `.env` file are loaded before starting SBT.
+2. Run `sbt run`
 
 #### Option 2: Azure Functions (Local)
+
 1. Ensure [Azure Functions Core Tools (v4)](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local) are available (automatically included in nix dev shell)
 2. Start blob storage: `docker compose up`
 3. Build the application: `sbt assembly`
