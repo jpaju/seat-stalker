@@ -1,7 +1,7 @@
 package fi.jpaju.telegram
 
-import zio.prelude.Assertion.*
 import zio.prelude.*
+import zio.prelude.Assertion.*
 
 type TelegramMessageBody = TelegramMessageBody.Type
 object TelegramMessageBody extends Subtype[String]:
@@ -9,5 +9,3 @@ object TelegramMessageBody extends Subtype[String]:
     hasLength(greaterThan(0))
 
 case class MessageDeliveryError(message: String, throwable: Throwable)
-
-case class TelegramConfig(token: String, chatId: String)

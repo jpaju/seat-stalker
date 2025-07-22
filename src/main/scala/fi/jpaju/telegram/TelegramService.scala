@@ -3,6 +3,7 @@ package fi.jpaju.telegram
 import sttp.client3.*
 import sttp.client3.ziojson.*
 import zio.*
+import zio.config.magnolia.*
 import zio.json.*
 
 trait TelegramService:
@@ -54,4 +55,12 @@ object LiveTelegramService:
 
   private given JsonCodec[TelegramErrorResponse] = DeriveJsonCodec.gen[TelegramErrorResponse]
 
-  val layer = ZLayer.fromFunction(LiveTelegramService.apply)
+  val layer = ZLayer:
+    for
+      config      <- ZIO.config(TelegramConfig.config.nested("TELEGRAM"))
+      sttpBackend <- ZIO.service[SttpBackend[Task, Any]]
+    yield LiveTelegramService(config, sttpBackend)
+
+case class TelegramConfig(token: String, chatId: String)
+object TelegramConfig:
+  val config = deriveConfig[TelegramConfig]

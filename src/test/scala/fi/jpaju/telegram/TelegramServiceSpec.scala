@@ -108,12 +108,20 @@ object TelegramServiceSpec extends ZIOSpecDefault:
   """
 
   private def withTelegramService[R, E, A](config: TelegramConfig, sttpBackend: SttpBackend[Task, Any])(
-      f: TelegramService => ZIO[R & TelegramService, E, A]
+      f: TelegramService => ZIO[R, E, A]
   ): ZIO[R, E, A] =
+    val hardcodedConfig = Map(
+      "TELEGRAM_TOKEN"  -> config.token,
+      "TELEGRAM_CHATID" -> config.chatId
+    )
+    val configProvider  = ConfigProvider
+      .fromMap(hardcodedConfig, pathDelim = "_")
+      .upperCase
+
     ZIO
       .serviceWithZIO[TelegramService](f)
       .provideSome[R](
-        LiveTelegramService.layer,
-        ZLayer.succeed(config),
+        LiveTelegramService.layer.orDie,
         ZLayer.succeed(sttpBackend)
       )
+      .withConfigProvider(configProvider)

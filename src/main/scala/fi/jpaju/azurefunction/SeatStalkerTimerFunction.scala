@@ -26,7 +26,6 @@ class SeatStalkerTimerFunction:
           LiveStalkerApp.layer,
           LiveStalkerJobRunner.layer,
           StalkerApp.hardcodedJobsRepositoryLayer,
-          ApplicationConfig.layer,
           HttpClientZioBackend.layer(),
           TableOnlineIntegration.layer,
           LiveTelegramService.layer,
