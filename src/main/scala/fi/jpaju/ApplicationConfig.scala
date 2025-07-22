@@ -5,19 +5,11 @@ import fi.jpaju.telegram.*
 import zio.*
 import zio.config.*
 import zio.config.magnolia.*
-import zio.config.syntax.*
-import java.util.Locale
 
 case class ApplicationConfig(telegram: TelegramConfig)
 
 object ApplicationConfig:
-  private val keyDelimiter     = Option('_')
-  private val configDescriptor = descriptor[ApplicationConfig]
+  private val config         = deriveConfig[ApplicationConfig]
+  private val configProvider = ConfigProvider.fromEnv()
 
-  private val configSource    = ConfigSource.fromSystemEnv(keyDelimiter = keyDelimiter)
-  private val lowerCaseSource =
-    configSource.mapKeys(key => key.toLowerCase(Locale.ENGLISH)) // To combat some Azure madness
-  private val combinedSource  = configSource <> lowerCaseSource
-
-  private val configLayer = ZLayer { read(configDescriptor.from(combinedSource)) }
-  val layer               = configLayer.narrow(_.telegram)
+  val layer = ZLayer { configProvider.load(config) }.project(_.telegram)
