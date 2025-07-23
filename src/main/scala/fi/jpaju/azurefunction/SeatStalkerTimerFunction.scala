@@ -28,7 +28,7 @@ class SeatStalkerTimerFunction:
           StalkerApp.hardcodedJobsRepositoryLayer,
           HttpClientZioBackend.layer(),
           TableOnlineIntegration.layer,
-          LiveTelegramService.layer,
+          LiveTelegramClient.layer,
           Logging.azFunctionLoggerLayer(context.getLogger)
         )
         .unit // This is for the compiler not to complain

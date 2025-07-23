@@ -3,18 +3,17 @@ package fi.jpaju.telegram
 import sttp.client3.*
 import sttp.client3.ziojson.*
 import zio.*
-import zio.config.magnolia.*
 import zio.json.*
 
-trait TelegramService:
+trait TelegramClient:
   def sendMessage(messageBody: TelegramMessageBody): IO[MessageDeliveryError, Unit]
 
-/** Service for interacting with Telegram bot API.
+/** Client for interacting with Telegram bot API.
   *
   * API docs: https://core.telegram.org/bots/api
   */
-case class LiveTelegramService(config: TelegramConfig, sttpBackend: SttpBackend[Task, Any]) extends TelegramService:
-  import LiveTelegramService.*
+case class LiveTelegramClient(config: TelegramConfig, sttpBackend: SttpBackend[Task, Any]) extends TelegramClient:
+  import LiveTelegramClient.*
 
   // https://core.telegram.org/bots/api#sendmessage
   override def sendMessage(messageBody: TelegramMessageBody): IO[MessageDeliveryError, Unit] =
@@ -46,7 +45,7 @@ case class LiveTelegramService(config: TelegramConfig, sttpBackend: SttpBackend[
       )
       .unit
 
-object LiveTelegramService:
+object LiveTelegramClient:
   private case class TelegramErrorResponse(
       ok: Boolean,
       @jsonHint("error_code") errorCode: Int,
@@ -59,8 +58,4 @@ object LiveTelegramService:
     for
       config      <- ZIO.config(TelegramConfig.config.nested("TELEGRAM"))
       sttpBackend <- ZIO.service[SttpBackend[Task, Any]]
-    yield LiveTelegramService(config, sttpBackend)
-
-case class TelegramConfig(token: String, chatId: String)
-object TelegramConfig:
-  val config = deriveConfig[TelegramConfig]
+    yield LiveTelegramClient(config, sttpBackend)

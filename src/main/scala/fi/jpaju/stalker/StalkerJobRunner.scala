@@ -18,7 +18,7 @@ trait StalkerJobRunner:
 
 case class LiveStalkerJobRunner(
     tableService: TableService,
-    telegramService: TelegramService
+    telegramClient: TelegramClient
 ) extends StalkerJobRunner:
   def runJob(jobDefinition: StalkerJobDefinition): UIO[Unit] =
     val spanName = s"stalker-job-${jobDefinition.restaurant.name}-${jobDefinition.persons}"
@@ -60,7 +60,7 @@ case class LiveStalkerJobRunner(
       .orDieWith(validationErrs => new RuntimeException(s"Telegram message was nonempty: ${validationErrs.toString}"))
 
     telegramMessage
-      .flatMap(telegramService.sendMessage(_))
+      .flatMap(telegramClient.sendMessage(_))
       .tapError(err =>
         ZIO.logError(s"Encountered an error: $err, when trying to notify about tables: $availableTables")
       )

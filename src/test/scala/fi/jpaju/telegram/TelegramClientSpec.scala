@@ -7,8 +7,8 @@ import sttp.model.*
 import zio.*
 import zio.test.*
 
-object TelegramServiceSpec extends ZIOSpecDefault:
-  override def spec = suite("TelegramServiceSpec")(
+object TelegramClientSpec extends ZIOSpecDefault:
+  override def spec = suite("TelegramClientSpec")(
     test("when sending message, then Telegram API is called with correct parameters") {
       check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
         val chatId = telegramConfig.chatId
@@ -30,9 +30,9 @@ object TelegramServiceSpec extends ZIOSpecDefault:
           assert(uri.paramsMap)(equalTo(expectedQueryParams))
         end assertCorrectRequest
 
-        withTelegramService(telegramConfig, recordingBackend) { service =>
+        withTelegramClient(telegramConfig, recordingBackend) { client =>
           for
-            _      <- service.sendMessage(messageBody)
+            _      <- client.sendMessage(messageBody)
             request = recordingBackend.allInteractions.head._1
           yield assertCorrectRequest(request)
         }
@@ -53,8 +53,8 @@ object TelegramServiceSpec extends ZIOSpecDefault:
         .thenRespond(badTokenResponse)
 
       check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
-        withTelegramService(telegramConfig, sttpBackendStub) { service =>
-          service.sendMessage(messageBody).exit.map { exit =>
+        withTelegramClient(telegramConfig, sttpBackendStub) { client =>
+          client.sendMessage(messageBody).exit.map { exit =>
             assert(exit.isFailure)(isTrue)
           }
         }
@@ -75,8 +75,8 @@ object TelegramServiceSpec extends ZIOSpecDefault:
         .thenRespond(chatNotFoundResponse)
 
       check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
-        withTelegramService(telegramConfig, sttpBackendStub) { service =>
-          val result = service.sendMessage(messageBody).exit
+        withTelegramClient(telegramConfig, sttpBackendStub) { client =>
+          val result = client.sendMessage(messageBody).exit
           assertZIO(result)(fails(anything))
         }
       }
@@ -107,8 +107,8 @@ object TelegramServiceSpec extends ZIOSpecDefault:
     }
   """
 
-  private def withTelegramService[R, E, A](config: TelegramConfig, sttpBackend: SttpBackend[Task, Any])(
-      f: TelegramService => ZIO[R, E, A]
+  private def withTelegramClient[R, E, A](config: TelegramConfig, sttpBackend: SttpBackend[Task, Any])(
+      f: TelegramClient => ZIO[R, E, A]
   ): ZIO[R, E, A] =
     val hardcodedConfig = Map(
       "TELEGRAM_TOKEN"  -> config.token,
@@ -119,9 +119,9 @@ object TelegramServiceSpec extends ZIOSpecDefault:
       .upperCase
 
     ZIO
-      .serviceWithZIO[TelegramService](f)
+      .serviceWithZIO[TelegramClient](f)
       .provideSome[R](
-        LiveTelegramService.layer.orDie,
+        LiveTelegramClient.layer.orDie,
         ZLayer.succeed(sttpBackend)
       )
       .withConfigProvider(configProvider)

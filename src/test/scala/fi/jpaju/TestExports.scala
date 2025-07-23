@@ -1,7 +1,7 @@
 package fi.jpaju
 
 export fi.jpaju.util.Gens
-export fi.jpaju.util.{FakeTableService, FakeTelegramService}
+export fi.jpaju.util.{FakeTableService, FakeTelegramClient}
 export fi.jpaju.util.{nonEmpty}
 
 export zio.test.{ZIOSpecDefault, assert, assertTrue}

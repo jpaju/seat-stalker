@@ -14,7 +14,7 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
       for
         service      <- ZIO.service[StalkerJobRunner]
         _            <- service.runJob(jobDefinition)
-        sentMessages <- FakeTelegramService.getSentMessages
+        sentMessages <- FakeTelegramClient.getSentMessages
       yield assertTrue(sentMessages.isEmpty)
     },
     test("should send notification when tables available") {
@@ -24,7 +24,7 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
         _            <- FakeTableService.setAvailableTables(availableTables)
         service      <- ZIO.service[StalkerJobRunner]
         _            <- service.runJob(jobDefinition)
-        sentMessages <- FakeTelegramService.getSentMessages <* FakeTelegramService.resetSentMessages
+        sentMessages <- FakeTelegramClient.getSentMessages <* FakeTelegramClient.resetSentMessages
       yield assertTrue(sentMessages.size == 1)
     },
     test("should notify only about the first ten available tables") {
@@ -35,7 +35,7 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
         _            <- FakeTableService.setAvailableTables(availableTables)
         service      <- ZIO.service[StalkerJobRunner]
         _            <- service.runJob(jobDefinition)
-        sentMessages <- FakeTelegramService.getSentMessages
+        sentMessages <- FakeTelegramClient.getSentMessages
 
         // Definitely not the best way to test how many tables were sent, but works for now
         msgLineCount = sentMessages.headOption.map(_.split("\n").length).getOrElse(0)
@@ -58,14 +58,14 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
 
       for
         _      <- FakeTableService.setAvailableTables(availableTables)
-        _      <- FakeTelegramService.setSendMessageFunction(_ => ZIO.fail(deliveryError))
+        _      <- FakeTelegramClient.setSendMessageFunction(_ => ZIO.fail(deliveryError))
         runner <- ZIO.service[StalkerJobRunner]
         result <- runner.runJob(jobDefinition).exit
       yield assert(result)(dies(anything))
     }
   ).provide(
     LiveStalkerJobRunner.layer,
-    FakeTelegramService.layer,
+    FakeTelegramClient.layer,
     FakeTableService.layer,
     Runtime.removeDefaultLoggers
   )
