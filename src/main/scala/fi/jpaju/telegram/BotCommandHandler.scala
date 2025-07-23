@@ -4,24 +4,24 @@ import fi.jpaju.stalker.*
 import zio.*
 
 trait BotCommandHandler:
-  def handle(command: BotCommand, chatId: ChatId): IO[MessageDeliveryError, Unit]
+  def handle(command: BotCommand, context: MessageContext): IO[MessageDeliveryError, Unit]
 
 class LiveBotCommandHandler(
     telegramClient: TelegramClient,
     stalkerJobRepository: StalkerJobRepository
 ) extends BotCommandHandler:
 
-  def handle(command: BotCommand, chatId: ChatId): IO[MessageDeliveryError, Unit] =
+  def handle(command: BotCommand, context: MessageContext): IO[MessageDeliveryError, Unit] =
     command match
       case BotCommand.Echo(message) =>
-        val response    = s"Echo: $message"
+        val response    = s"Echo: $message" // TODO Factor message formatting to separate file/class
         val messageBody = TelegramMessageBody.wrap(response)
         telegramClient.sendMessage(messageBody)
 
       case BotCommand.ListJobs =>
         for
           jobs       <- stalkerJobRepository.getAll
-          response    = formatJobsList(jobs)
+          response    = formatJobsList(jobs) // TODO Factor message formatting to separate file/class
           messageBody = TelegramMessageBody.wrap(response)
           _          <- telegramClient.sendMessage(messageBody)
         yield ()

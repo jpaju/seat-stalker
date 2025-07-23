@@ -1,5 +1,6 @@
 package fi.jpaju.telegram
 
+import java.time.Instant
 import fi.jpaju.stalker.*
 import fi.jpaju.restaurant.*
 import fi.jpaju.util.FakeTelegramClient
@@ -17,7 +18,7 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
         msg             = "Hello world!"
 
         // When
-        _ <- handler.handle(BotCommand.Echo(msg), ChatId("12345"))
+        _ <- handler.handle(BotCommand.Echo(msg), randomContext())
 
         // Then
         sentMessages <- FakeTelegramClient.getSentMessages
@@ -31,7 +32,7 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
         handler         = LiveBotCommandHandler(telegramClient, jobRepository)
 
         // When
-        _ <- handler.handle(BotCommand.ListJobs, ChatId("12345"))
+        _ <- handler.handle(BotCommand.ListJobs, randomContext())
 
         // Then
         sentMessages <- FakeTelegramClient.getSentMessages
@@ -52,7 +53,7 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
         handler         = LiveBotCommandHandler(telegramClient, jobRepository)
 
         // When
-        _ <- handler.handle(BotCommand.ListJobs, ChatId("12345"))
+        _ <- handler.handle(BotCommand.ListJobs, randomContext())
 
         // Then
         sentMessages <- FakeTelegramClient.getSentMessages
@@ -65,3 +66,6 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
     FakeTelegramClient.layer,
     InMemoryStalkerJobRepository.layerFromJobs(Set.empty)
   )
+
+  private def randomContext(): MessageContext =
+    MessageContext(ChatId("1234"), Instant.now())
