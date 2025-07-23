@@ -2,6 +2,9 @@ package fi.jpaju.azurefunction
 
 import com.microsoft.azure.functions.*
 import com.microsoft.azure.functions.annotation.*
+import fi.jpaju.stalker.*
+import fi.jpaju.telegram.*
+import sttp.client3.httpclient.zio.*
 import zio.*
 
 class TelegramWebhookFunction:
@@ -15,14 +18,22 @@ class TelegramWebhookFunction:
       ) request: HttpRequestMessage[String],
       context: ExecutionContext
   ): HttpResponseMessage =
-    ZIOAzureFunctionAdapter.runOrThrowError(context) {
+    val requestBody = request.getBody
+    val okResponse  = request.createResponseBuilder(HttpStatus.OK).build()
+
+    val program =
       for
-        _       <- ZIO.log(s"Telegram webhook called")
-        _       <- ZIO.log(s"Request URI: ${request.getUri}")
-        _       <- ZIO.log(s"Request query params: ${request.getQueryParameters}")
-        _       <- ZIO.log(s"Request headers: ${request.getHeaders}")
-        _       <- ZIO.log(s"Request body: ${request.getBody}")
-        response = request.createResponseBuilder(HttpStatus.OK).build()
-      yield response
+        _ <- ZIO.log(s"Webhook called, request body: $requestBody")
+        _ <- ZIO.serviceWithZIO[BotController](_.handleWebhook(requestBody))
+      yield okResponse
+
+    ZIOAzureFunctionAdapter.runOrThrowError(context) {
+      program.provide(
+        LiveBotController.layer,
+        LiveBotCommandHandler.layer,
+        StalkerApp.hardcodedJobsRepositoryLayer,
+        LiveTelegramClient.layer,
+        HttpClientZioBackend.layer()
+      )
 
     }

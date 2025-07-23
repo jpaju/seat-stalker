@@ -12,7 +12,7 @@ trait TelegramClient:
   *
   * API docs: https://core.telegram.org/bots/api
   */
-case class LiveTelegramClient(config: TelegramConfig, sttpBackend: SttpBackend[Task, Any]) extends TelegramClient:
+class LiveTelegramClient(config: TelegramConfig, sttpBackend: SttpBackend[Task, Any]) extends TelegramClient:
   import LiveTelegramClient.*
 
   // https://core.telegram.org/bots/api#sendmessage
