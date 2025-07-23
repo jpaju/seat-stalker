@@ -1,0 +1,19 @@
+{
+  "scriptFile": "../seat-stalker.jar",
+  "entryPoint": "fi.jpaju.azurefunction.TelegramWebhookFunction.run",
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": ["POST"],
+      "authLevel": "anonymous",
+      "route": "telegram/webhook"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    }
+  ]
+}
