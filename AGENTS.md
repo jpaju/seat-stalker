@@ -102,8 +102,7 @@ Apply these principles during refactoring phase:
 After making any code changes, you MUST verify everything works by running these commands:
 
 1. `sbt scalafmtAll scalafmtSbt` - Format code
-2. `sbt Test/compile integration/Test/compile` - Verify project and tests compile
-3. `sbt test` - Run all tests to ensure nothing is broken
+2. `sbt test integration/test` - Run all tests to ensure nothing is broken
 
 **IMPORTANT**: This verification step is required for ALL Scala/SBT changes, regardless of whether you used TDD or just restructured files/folders.
 
