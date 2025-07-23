@@ -56,13 +56,14 @@ ThisBuild / wartremoverExcluded ++= Seq(
 // DEPENDENCY VERSIONS
 // ===========================================================================================
 
-val zioVersion        = "2.1.19"
-val zioConfigVersion  = "4.0.4"
-val zioLoggingVersion = "2.5.1"
-val zioJsonVersion    = "0.7.44"
-val zioPreludeversion = "1.0.0-RC41"
-val sttpVersion       = "3.11.0"
-val azFunctionVersion = "3.1.0"
+val zioVersion         = "2.1.19"
+val zioConfigVersion   = "4.0.4"
+val zioLoggingVersion  = "2.5.1"
+val zioJsonVersion     = "0.7.44"
+val zioPreludeversion  = "1.0.0-RC41"
+val telegramiumVersion = "9.901.0"
+val sttpVersion        = "3.11.0"
+val azFunctionVersion  = "3.1.0"
 
 // ===========================================================================================
 // PROJECT CONFIGURATION
@@ -77,6 +78,7 @@ lazy val root = (project in file("."))
       "dev.zio"                       %% "zio-logging"                  % zioLoggingVersion,
       "dev.zio"                       %% "zio-config"                   % zioConfigVersion,
       "dev.zio"                       %% "zio-config-magnolia"          % zioConfigVersion,
+      "io.github.apimorphism"         %% "telegramium-core"             % telegramiumVersion,
       "com.softwaremill.sttp.client3" %% "core"                         % sttpVersion,
       "com.softwaremill.sttp.client3" %% "zio"                          % sttpVersion,
       "com.softwaremill.sttp.client3" %% "zio-json"                     % sttpVersion,
