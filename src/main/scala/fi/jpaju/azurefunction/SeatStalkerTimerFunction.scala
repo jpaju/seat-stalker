@@ -3,7 +3,6 @@ package fi.jpaju.azurefunction
 import com.microsoft.azure.functions.ExecutionContext
 import com.microsoft.azure.functions.annotation.FunctionName
 import com.microsoft.azure.functions.annotation.TimerTrigger
-import fi.jpaju.*
 import fi.jpaju.restaurant.*
 import fi.jpaju.stalker.*
 import fi.jpaju.telegram.*
@@ -17,19 +16,18 @@ class SeatStalkerTimerFunction:
       context: ExecutionContext
   ): Unit =
     val program =
-      ZIO.log(s"Timer triggered, TimerInfo: $timerInfo") *>
-        ZIO.serviceWithZIO[StalkerApp](_.run)
+      for
+        _ <- ZIO.log(s"Timer triggered, timerInfo: $timerInfo")
+        _ <- ZIO.serviceWithZIO[StalkerApp](_.run)
+      yield ()
 
-    ZIOAppRunner.runThrowOnError(
-      program
-        .provide(
-          LiveStalkerApp.layer,
-          LiveStalkerJobRunner.layer,
-          StalkerApp.hardcodedJobsRepositoryLayer,
-          HttpClientZioBackend.layer(),
-          TableOnlineIntegration.layer,
-          LiveTelegramClient.layer,
-          Logging.azFunctionLoggerLayer(context.getLogger)
-        )
-        .unit // This is for the compiler not to complain
-    )
+    ZIOAzureFunctionAdapter.runOrThrowError(context) {
+      program.provide(
+        LiveStalkerApp.layer,
+        LiveStalkerJobRunner.layer,
+        StalkerApp.hardcodedJobsRepositoryLayer,
+        HttpClientZioBackend.layer(),
+        TableOnlineIntegration.layer,
+        LiveTelegramClient.layer
+      )
+    }
