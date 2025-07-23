@@ -1,15 +1,15 @@
 Global / onChangedBuildSource := ReloadOnSourceChanges
 watchBeforeCommand            := Watch.clearScreen
 
-name         := "seat-stalker"
-version      := "0.1.0-SNAPSHOT"
-scalaVersion := "3.7.1"
+name    := "seat-stalker"
+version := "0.1.0-SNAPSHOT"
 
 // ===========================================================================================
 // COMPILER CONFIGURATION
 // ===========================================================================================
 
-scalacOptions ++= Seq(
+ThisBuild / scalaVersion := "3.7.1"
+ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-explain",
@@ -46,8 +46,11 @@ ThisBuild / wartremoverWarnings ++= Warts.allBut(
   Wart.ToString
 )
 
-// Disable for tests
-ThisBuild / wartremoverExcluded ++= Seq("test", "it").map(baseDirectory.value / "src" / _)
+// Disable wartremover for tests
+ThisBuild / wartremoverExcluded ++= Seq(
+  baseDirectory.value,
+  (integration / baseDirectory).value
+).map(_ / "src" / "test")
 
 // ===========================================================================================
 // DEPENDENCY VERSIONS
@@ -79,17 +82,21 @@ lazy val root = (project in file("."))
       "com.softwaremill.sttp.client3" %% "zio-json"                     % sttpVersion,
       "com.microsoft.azure.functions"  % "azure-functions-java-library" % azFunctionVersion
     ),
-    libraryDependencies ++= Seq(
-      "dev.zio" %% "zio-test"          % zioVersion,
-      "dev.zio" %% "zio-test-sbt"      % zioVersion,
-      "dev.zio" %% "zio-test-magnolia" % zioVersion
-    ).map(_ % "test,it"),
-    Defaults.itSettings
+    libraryDependencies ++= zioTestDependencies
   )
-  .configs(DeepIntegrationTest)
 
-lazy val DeepIntegrationTest =
-  IntegrationTest.extend(Test) // Required for bloop https://github.com/scalacenter/bloop/issues/1162
+lazy val integration = (project in file("integration"))
+  .dependsOn(root % "compile->compile;test->test")
+  .settings(
+    publish / skip := true,
+    libraryDependencies ++= zioTestDependencies
+  )
+
+lazy val zioTestDependencies = Seq(
+  "dev.zio" %% "zio-test"          % zioVersion,
+  "dev.zio" %% "zio-test-sbt"      % zioVersion,
+  "dev.zio" %% "zio-test-magnolia" % zioVersion
+).map(_ % Test)
 
 // ===========================================================================================
 // PACKAGING/DEPLOYMENT CONFIGURATION

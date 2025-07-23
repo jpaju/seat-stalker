@@ -43,7 +43,7 @@ jobs:
         uses: cachix/install-nix-action@v31
 
       - name: Build and run integration tests
-        run: nix develop --command sbt IntegrationTest/test
+        run: nix develop --command sbt integration/test
 
   build-and-deploy:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'

@@ -16,7 +16,7 @@ Built in Scala 3 using the ZIO ecosystem and deployed as an Azure Timer Function
 - **`telegram/`** - Telegram Bot API client and notification formatting
 - **`azurefunction/`** - Azure Functions runtime adapter with daily timer trigger
 - **`src/test/`** - Unit tests
-- **`src/it/`** - Integration tests
+- **`integration/`** - Integration tests (separate subproject)
 
 ### Technology stack
 
@@ -61,7 +61,7 @@ Built in Scala 3 using the ZIO ecosystem and deployed as an Azure Timer Function
 - **Unit tests** (`src/test/`) - Fast, in-memory tests with mocked dependencies
   - Prefer unit tests over integration tests
   - Use fake implementations from `src/test/scala/fi/jpaju/util` folder
-- **Integration tests** (`src/it/`) - Tests requiring external dependencies (databases, containers)
+- **Integration tests** (`integration/`) - Tests requiring external dependencies (databases, containers)
 - **ZIO Test exclusively** - Do not use other testing libraries unless explicitly requested
 
 ## Development workflow
@@ -102,7 +102,7 @@ Apply these principles during refactoring phase:
 After making any code changes, you MUST verify everything works by running these commands:
 
 1. `sbt scalafmtAll scalafmtSbt` - Format code
-2. `sbt Test/compile IntegrationTest/compile` - Verify project and tests compile
+2. `sbt Test/compile integration/Test/compile` - Verify project and tests compile
 3. `sbt test` - Run all tests to ensure nothing is broken
 
 **IMPORTANT**: This verification step is required for ALL Scala/SBT changes, regardless of whether you used TDD or just restructured files/folders.
@@ -112,9 +112,9 @@ After making any code changes, you MUST verify everything works by running these
 **Prefer Metals MCP server tools when available** (look for `mcp__seat-stalker-metals__*` commands), otherwise use these sbt commands:
 
 - `sbt compile` - Compile the project
-- `sbt Test/compile IntegrationTest/compile` - Compile tests
+- `sbt Test/compile integration/Test/compile` - Compile tests
 - `sbt test` - Run unit tests
-- `sbt IntegrationTest/test` - Run integration tests
+- `sbt integration/test` - Run integration tests
 - `sbt testOnly <TestClassName>` - Run specific test class
 - `sbt testOnly *<TestPattern>*` - Run tests matching pattern
 - `sbt scalafmtCheckAll scalafmtSbtCheck` - Check code formatting
