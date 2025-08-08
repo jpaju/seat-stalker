@@ -56,6 +56,6 @@ object LiveTelegramClient:
 
   val layer = ZLayer:
     for
-      config      <- ZIO.config(TelegramConfig.config.nested("TELEGRAM"))
+      config      <- ZIO.config(TelegramConfig.config)
       sttpBackend <- ZIO.service[SttpBackend[Task, Any]]
     yield LiveTelegramClient(config, sttpBackend)
