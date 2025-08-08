@@ -40,7 +40,7 @@ object Gens:
   // =============================================== Telegram ===============================================
 
   val telegramConfig: Gen[Any, TelegramConfig] =
-    (Gen.asciiString <*> Gen.asciiString.nonEmpty).map(TelegramConfig.apply)
+    (Gen.asciiString <*> Gen.asciiString.nonEmpty <*> Gen.asciiString.nonEmpty).map(TelegramConfig.apply)
 
   val telegramMessageBody: Gen[Any, TelegramMessageBody] =
     Gen // Use large generator to make sure long messages are generated

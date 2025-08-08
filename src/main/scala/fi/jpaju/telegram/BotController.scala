@@ -7,12 +7,12 @@ import zio.*
 import java.time.Instant
 
 trait BotController:
-  def handleWebhook(jsonPayload: String): IO[BotError, Unit]
+  def handleWebhook(jsonPayload: String, headers: Map[String, String]): IO[BotError, Unit]
 
-class LiveBotController(botCommandHandler: BotCommandHandler) extends BotController:
-  override def handleWebhook(jsonPayload: String): IO[BotError, Unit] =
-    // TODO Verify secret token from request
-    val run = for
+class LiveBotController(botCommandHandler: BotCommandHandler, config: TelegramConfig) extends BotController:
+  override def handleWebhook(jsonPayload: String, headers: Map[String, String]): IO[BotError, Unit] =
+    for
+      _       <- validateSecretToken(headers)
       update  <- decodePayload(jsonPayload)
       message <- parseMessage(update)
       command <- parseCommand(message)
@@ -22,12 +22,11 @@ class LiveBotController(botCommandHandler: BotCommandHandler) extends BotControl
                    .mapError(BotError.DeliveryError(_))
     yield ()
 
-    // TODO Report errors either by sending message to user or logging
-    run.catchAll {
-      case BotError.ParseError(message)   => ZIO.unit
-      case BotError.CommandError(message) => ZIO.unit
-      case BotError.DeliveryError(error)  => ZIO.unit
-    }
+  private def validateSecretToken(headers: Map[String, String]): IO[BotError, Unit] =
+    headers.get("X-Telegram-Bot-Api-Secret-Token") match
+      case Some(token) if token == config.secretToken => ZIO.unit
+      case Some(_)                                    => ZIO.fail(BotError.AuthenticationError("Invalid secret token"))
+      case None                                       => ZIO.fail(BotError.AuthenticationError("Missing secret token header"))
 
   // TODO Refactor decoding to another class/file?
   private def decodePayload(jsonPayload: String) =
@@ -60,4 +59,8 @@ class LiveBotController(botCommandHandler: BotCommandHandler) extends BotControl
     Instant.ofEpochSecond(message.date)
 
 object LiveBotController:
-  val layer = ZLayer.fromFunction(LiveBotController.apply)
+  val layer = ZLayer:
+    for
+      handler <- ZIO.service[BotCommandHandler]
+      config  <- ZIO.config(TelegramConfig.config)
+    yield LiveBotController(handler, config)

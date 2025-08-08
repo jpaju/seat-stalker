@@ -111,8 +111,9 @@ object TelegramClientSpec extends ZIOSpecDefault:
       f: TelegramClient => ZIO[R, E, A]
   ): ZIO[R, E, A] =
     val hardcodedConfig = Map(
-      "TELEGRAM_TOKEN"  -> config.token,
-      "TELEGRAM_CHATID" -> config.chatId
+      "TELEGRAM_TOKEN"       -> config.token,
+      "TELEGRAM_CHATID"      -> config.chatId,
+      "TELEGRAM_SECRETTOKEN" -> config.secretToken
     )
     val configProvider  = ConfigProvider
       .fromMap(hardcodedConfig, pathDelim = "_")
