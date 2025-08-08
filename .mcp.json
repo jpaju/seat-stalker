@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "seat-stalker-metals": {
+      "type": "sse",
+      "url": "http://localhost:57085/sse"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "includeCoAuthoredBy": false,
+  "enableAllProjectMcpServers": true,
+  "permissions": {
+    "allow": ["WebFetch(*)","WebSearch(*)", "mcp__seat-stalker-metals__*"]
+  }
+}
