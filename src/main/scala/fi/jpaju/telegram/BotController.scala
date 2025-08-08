@@ -23,7 +23,7 @@ class LiveBotController(botCommandHandler: BotCommandHandler, config: TelegramCo
     yield ()
 
   private def validateSecretToken(headers: Map[String, String]): IO[BotError, Unit] =
-    headers.get("X-Telegram-Bot-Api-Secret-Token") match
+    headers.get("x-telegram-bot-api-secret-token") match
       case Some(token) if token == config.secretToken => ZIO.unit
       case Some(_)                                    => ZIO.fail(BotError.AuthenticationError("Invalid secret token"))
       case None                                       => ZIO.fail(BotError.AuthenticationError("Missing secret token header"))

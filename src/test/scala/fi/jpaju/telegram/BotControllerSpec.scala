@@ -23,7 +23,7 @@ object BotControllerSpec extends ZIOSpecDefault:
       for
         // Given
         controller <- createBotController
-        headers     = Map("X-Telegram-Bot-Api-Secret-Token" -> "invalid-token")
+        headers     = Map("x-telegram-bot-api-secret-token" -> "invalid-token")
 
         // When
         result <- controller.handleWebhook(emptyPayload, headers).exit
@@ -56,7 +56,7 @@ object BotControllerSpec extends ZIOSpecDefault:
     yield LiveBotController(handler, testConfig)
 
   private def validHeaders =
-    Map("X-Telegram-Bot-Api-Secret-Token" -> "valid-secret")
+    Map("x-telegram-bot-api-secret-token" -> "valid-secret")
 
   private def emptyPayload = """{}"""
 
