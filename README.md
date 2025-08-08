@@ -34,7 +34,8 @@ Create a `.env` file in the project root with your Telegram credentials:
 
 ```
 TELEGRAM_CHATID=<your-chat-id>
-TELEGRAM_TOKEN=<your-bot-token>
+TELEGRAM_BOTTOKEN=<your-bot-token>
+TELEGRAM_SECRETTOKEN=<your-secret-token>
 ```
 
 The `.env` file should be loaded into your environment. If using nix-direnv or dotenv, it will be loaded automatically.

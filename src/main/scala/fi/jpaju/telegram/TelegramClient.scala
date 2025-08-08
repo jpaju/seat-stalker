@@ -21,7 +21,7 @@ class LiveTelegramClient(config: TelegramConfig, sttpBackend: SttpBackend[Task, 
       "chat_id" -> config.chatId,
       "text"    -> messageBody
     )
-    val url         = uri"https://api.telegram.org/bot${config.token}/sendMessage?$queryParams"
+    val url         = uri"https://api.telegram.org/bot${config.botToken}/sendMessage?$queryParams"
     val request     = basicRequest
       .get(url)
       .response(asEither(asJson[TelegramErrorResponse], ignore)) // 2xx response indicates successful delivery

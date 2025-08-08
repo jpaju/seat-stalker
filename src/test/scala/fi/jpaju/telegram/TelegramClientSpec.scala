@@ -21,20 +21,20 @@ object TelegramClientSpec extends ZIOSpecDefault:
         def assertCorrectRequest(request: Request[?, ?]): TestResult =
           val uri                 = request.uri
           val expectedQueryParams = Map[String, String](
-            "chat_id" -> chatId.toString,
-            "text"    -> messageBody.toString
+            "chat_id" -> chatId,
+            "text"    -> messageBody
           )
 
           assert(uri.host)(equalTo(Some("api.telegram.org"))) &&
-          assert(uri.path)(equalTo(List(s"bot${telegramConfig.token}", "sendMessage"))) &&
+          assert(uri.path)(equalTo(List(s"bot${telegramConfig.botToken}", "sendMessage"))) &&
           assert(uri.paramsMap)(equalTo(expectedQueryParams))
         end assertCorrectRequest
 
         withTelegramClient(telegramConfig, recordingBackend) { client =>
           for
-            _      <- client.sendMessage(messageBody)
-            request = recordingBackend.allInteractions.head._1
-          yield assertCorrectRequest(request)
+            _            <- client.sendMessage(messageBody)
+            List(request) = recordingBackend.allInteractions
+          yield assertCorrectRequest(request._1)
         }
       }
     },
@@ -111,7 +111,7 @@ object TelegramClientSpec extends ZIOSpecDefault:
       f: TelegramClient => ZIO[R, E, A]
   ): ZIO[R, E, A] =
     val hardcodedConfig = Map(
-      "TELEGRAM_TOKEN"       -> config.token,
+      "TELEGRAM_BOTTOKEN"    -> config.botToken,
       "TELEGRAM_CHATID"      -> config.chatId,
       "TELEGRAM_SECRETTOKEN" -> config.secretToken
     )

@@ -52,7 +52,7 @@ object BotControllerSpec extends ZIOSpecDefault:
   private def createBotController: ZIO[BotCommandHandler, Nothing, LiveBotController] =
     for
       handler   <- ZIO.service[BotCommandHandler]
-      testConfig = TelegramConfig(token = "test-token", chatId = "12345", secretToken = "valid-secret")
+      testConfig = TelegramConfig(botToken = "test-token", chatId = "12345", secretToken = "valid-secret")
     yield LiveBotController(handler, testConfig)
 
   private def validHeaders =
