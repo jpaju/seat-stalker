@@ -14,6 +14,7 @@
             sbt
             temurin-bin-21
             scala-cli
+            azure-cli
             azure-functions-core-tools
           ];
 
