@@ -4,6 +4,11 @@ variable "subscription_id" {
   default     = "7ef2b999-13ea-4839-a556-6ba8043da44f"
 }
 
+variable "project_name" {
+  type        = string
+  default     = "seat-stalker"
+}
+
 variable "telegram_chat_id" {
   type      = string
   sensitive = true

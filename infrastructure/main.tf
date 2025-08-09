@@ -20,16 +20,8 @@ provider "azurerm" {
   features {}
 }
 
-# TODO: Telegram secrets and email to Github Secrets
-# tfstate
-# workflow.yml
-
-locals {
-  project_name = "seat-stalker"
-}
-
 resource "azurerm_resource_group" "az_resource_group" {
-  name     = "rg-${local.project_name}"
+  name     = "rg-${var.project_name}"
   location = "North Europe"
 }
 
@@ -55,7 +47,7 @@ resource "azurerm_service_plan" "az_app_service_plan" {
 }
 
 resource "azurerm_linux_function_app" "az_function_app" {
-  name                = "func-${local.project_name}"
+  name                = "func-${var.project_name}"
   resource_group_name = azurerm_resource_group.az_resource_group.name
   location            = azurerm_resource_group.az_resource_group.location
 
@@ -98,7 +90,7 @@ resource "azurerm_linux_function_app" "az_function_app" {
 # =================================================== Log analytics ===================================================
 
 resource "azurerm_log_analytics_workspace" "az_loganalytics" {
-  name                = "loganalytics-${local.project_name}"
+  name                = "loganalytics-${var.project_name}"
   location            = azurerm_resource_group.az_resource_group.location
   resource_group_name = azurerm_resource_group.az_resource_group.name
   sku                 = "PerGB2018"
@@ -106,7 +98,7 @@ resource "azurerm_log_analytics_workspace" "az_loganalytics" {
 }
 
 resource "azurerm_application_insights" "az_application_insights" {
-  name                = "app-insights-${local.project_name}"
+  name                = "func-${var.project_name}"
   location            = azurerm_resource_group.az_resource_group.location
   resource_group_name = azurerm_resource_group.az_resource_group.name
   workspace_id        = azurerm_log_analytics_workspace.az_loganalytics.id
@@ -134,7 +126,7 @@ resource "azurerm_monitor_action_group" "az_monitor_action_group" {
 }
 
 resource "azurerm_consumption_budget_resource_group" "az_consumption_budget_resource_group" {
-  name              = "budget-${local.project_name}"
+  name              = "budget-${var.project_name}"
   resource_group_id = azurerm_resource_group.az_resource_group.id
 
   amount     = 10
