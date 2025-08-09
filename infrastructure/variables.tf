@@ -3,7 +3,12 @@ variable "telegram_chat_id" {
   sensitive = true
 }
 
-variable "telegram_token" {
+variable "telegram_bot_token" {
+  type      = string
+  sensitive = true
+}
+
+variable "telegram_secret_token" {
   type      = string
   sensitive = true
 }

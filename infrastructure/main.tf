@@ -8,11 +8,6 @@ terraform {
   }
 
   backend "azurerm" {
-    # resource_group_name  = var.state_rg_name
-    # storage_account_name = var.state_storage_account_name
-    # container_name       = var.state_container_name
-    # key                  = var.state_storage_key
-
     resource_group_name  = "rg-seat-stalker"
     storage_account_name = "safuncseatstalker"
     container_name       = "tfstate"
@@ -29,19 +24,15 @@ provider "azurerm" {
 # workflow.yml
 
 locals {
-  # project_name = "seatstalker"
-  # env_name     = terraform.workspace == "default" ? "" : "${terraform.workspace}"
   project_name = "seat-stalker"
-  env_name     = ""
 }
 
 resource "azurerm_resource_group" "az_resource_group" {
-  name     = "rg-${local.project_name}${local.env_name}"
+  name     = "rg-${local.project_name}"
   location = "North Europe"
 }
 
 resource "azurerm_storage_account" "az_storage_account" {
-  # name                     = "safunc${local.project_name}${local.env_name}"
   name                     = "safuncseatstalker"
   resource_group_name      = azurerm_resource_group.az_resource_group.name
   location                 = azurerm_resource_group.az_resource_group.location
@@ -76,9 +67,9 @@ resource "azurerm_linux_function_app" "az_function_app" {
 
   app_settings = {
     "WEBSITE_MOUNT_ENABLED" = "1"
-    "telegram_chatid"       = var.telegram_chat_id
-    "telegram_token"        = var.telegram_token
-    # "xxWEBSITE_RUN_FROM_PACKAGExx" = "https://safuncseatstalker.blob.core.windows.net/function-releases/20221021224617-d4d2d8ce-3f19-4984-b056-b033257d5b5b.zip?sv=2018-03-28&sr=b&sig=t4jiEagnOwVwS7b%2BefZESKS5V5vauu0XOKCv0iPF2Xo%3D&st=2022-10-21T22%3A41%3A32Z&se=2032-10-21T22%3A46%3A32Z&sp=r"
+    "TELEGRAM_CHATID"       = var.telegram_chat_id
+    "TELEGRAM_BOTTOKEN"     = var.telegram_bot_token
+    "TELEGRAM_SECRETTOKEN"  = var.telegram_secret_token
   }
 
   https_only              = true
@@ -91,7 +82,7 @@ resource "azurerm_linux_function_app" "az_function_app" {
     ftps_state = "Disabled"
 
     application_stack {
-      java_version = "17"
+      java_version = "21"
     }
   }
 
