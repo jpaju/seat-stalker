@@ -39,7 +39,7 @@ resource "azurerm_storage_account" "az_storage_account" {
 # ================================================ Function App & Plan ================================================
 
 resource "azurerm_service_plan" "az_app_service_plan" {
-  name                = "app-service-plan-${local.project_name}"
+  name                = "ASP-rgseatstalker-bc6b"
   resource_group_name = azurerm_resource_group.az_resource_group.name
   location            = azurerm_resource_group.az_resource_group.location
   os_type             = "Linux"
