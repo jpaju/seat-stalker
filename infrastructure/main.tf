@@ -26,7 +26,7 @@ resource "azurerm_resource_group" "az_resource_group" {
 }
 
 resource "azurerm_storage_account" "az_storage_account" {
-  name                     = "safuncseatstalker"
+  name                     = "safunc${replace(var.project_name, "-", "")}"
   resource_group_name      = azurerm_resource_group.az_resource_group.name
   location                 = azurerm_resource_group.az_resource_group.location
   account_tier             = "Standard"
@@ -40,7 +40,7 @@ resource "azurerm_storage_account" "az_storage_account" {
 # ================================================ Function App & Plan ================================================
 
 resource "azurerm_service_plan" "az_app_service_plan" {
-  name                = "ASP-rgseatstalker-bc6b"
+  name                = "app-service-plan-${var.project_name}"
   resource_group_name = azurerm_resource_group.az_resource_group.name
   location            = azurerm_resource_group.az_resource_group.location
   os_type             = "Linux"
@@ -115,7 +115,7 @@ resource "azurerm_application_insights" "az_application_insights" {
 # ================================================ Email notifications ================================================
 
 resource "azurerm_monitor_action_group" "az_monitor_action_group" {
-  name                = "ag-func-failure"
+  name                = "ag-${var.project_name}-func-failure"
   resource_group_name = azurerm_resource_group.az_resource_group.name
   short_name          = "func-failure"
 

@@ -7,14 +7,16 @@ Application for notifying about free seats in popular restaurants. Uses telegram
 - [x] Actual logic to check for seats and send notifications accordingly
 - [x] Format sent telegram messages nicely
 - [x] CI Pipeline to deploy as scheduled Azure Function
+- [x] Terraform to manage infrastructure
+- [ ] Add persistence
+  - [ ] Store sent notifications so there are not duplicate notification about the same seat
 - [ ] Telegram bot webhook
   - [x] Check `secret_token` from request header
   - [ ] Support adding new restaurants dynamically
   - [ ] Autocomplete for bot commands
   - [ ] Support `inline_query` to enable interacting with the bot from any chat/conversation
-- [ ] Terraform to manage infrastructure
+  - [ ] Register webhook automatically using `setWebhook` during deployment/startup?
 - [ ] Combine multiple free seats together in one message
-- [ ] Persist sent notifications about seats so notification about the same seat wont be sent multiple times
 
 ### New integrations
 
