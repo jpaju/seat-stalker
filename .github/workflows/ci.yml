@@ -63,7 +63,7 @@ jobs:
         working-directory: ./infrastructure
 
       - name: Terraform Validate
-        run: nix develop .#infrastructure --command terraform validate -input=false
+        run: nix develop .#infrastructure --command terraform validate
         working-directory: ./infrastructure
 
       - name: Terraform Security Scan
@@ -107,13 +107,53 @@ jobs:
           terraform-cmd: nix develop .#infrastructure --command terraform
           working-directory: ./infrastructure
 
-  build-and-deploy:
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: infrastructure/tfplan
+          retention-days: 7
+
+  terraform-apply:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [terraform-plan]
     environment: Production
     concurrency:
-      group: production-deployment
+      group: terraform-apply
+      cancel-in-progress: false
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: infrastructure/
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        run: nix develop .#infrastructure --command terraform init -input=false
+        working-directory: ./infrastructure
+
+      - name: Terraform Apply
+        run: nix develop .#infrastructure --command terraform apply -input=false tfplan
+        working-directory: ./infrastructure
+
+  build-and-deploy:
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [terraform-apply]
+    concurrency:
+      group: application-deployment
       cancel-in-progress: false
     steps:
       - name: "Checkout GitHub Action"
