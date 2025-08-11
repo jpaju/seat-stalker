@@ -9,7 +9,7 @@ env:
   JVM_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
 
 jobs:
-  format-check:
+  scala-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,7 +45,7 @@ jobs:
       - name: Build and run integration tests
         run: nix develop --command sbt integration/test
 
-  terraform-validation:
+  terraform-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,25 +55,62 @@ jobs:
         uses: cachix/install-nix-action@v31
 
       - name: Terraform Format Check
-        run: nix develop --command terraform fmt -check -recursive
+        run: nix develop .#infrastructure --command terraform fmt -check -recursive
         working-directory: ./infrastructure
 
       - name: Terraform Init
-        run: nix develop --command terraform init -backend=false
+        run: nix develop .#infrastructure --command terraform init -backend=false -input=false
         working-directory: ./infrastructure
 
       - name: Terraform Validate
-        run: nix develop --command terraform validate
+        run: nix develop .#infrastructure --command terraform validate -input=false
         working-directory: ./infrastructure
 
       - name: Terraform Security Scan
-        run: nix develop --command tfsec .
+        run: nix develop .#infrastructure --command tfsec .
         working-directory: ./infrastructure
+
+  terraform-plan:
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    needs: [scala-lint, unit-test, integration-test, terraform-lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        run: nix develop .#infrastructure --command terraform init -input=false
+        working-directory: ./infrastructure
+
+      - name: Terraform Plan
+        run: nix develop .#infrastructure --command terraform plan -out=tfplan -input=false
+        working-directory: ./infrastructure
+        env:
+          TF_VAR_telegram_chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TF_VAR_telegram_bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TF_VAR_telegram_secret_token: ${{ secrets.TELEGRAM_SECRET_TOKEN }}
+          TF_VAR_email_alert_recipient: ${{ secrets.EMAIL_ALERT_RECIPIENT }}
+
+      - name: Post Terraform Plan Comment
+        uses: borchero/terraform-plan-comment@v2
+        with:
+          token: ${{ github.token }}
+          planfile: tfplan
+          terraform-cmd: nix develop .#infrastructure --command terraform
+          working-directory: ./infrastructure
 
   build-and-deploy:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [format-check, unit-test, integration-test, terraform-validation]
+    needs: [terraform-plan]
     environment: Production
     concurrency:
       group: production-deployment
