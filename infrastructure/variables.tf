@@ -5,8 +5,8 @@ variable "subscription_id" {
 }
 
 variable "project_name" {
-  type        = string
-  default     = "seat-stalker"
+  type    = string
+  default = "seat-stalker"
 }
 
 variable "telegram_chat_id" {

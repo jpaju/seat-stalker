@@ -6,7 +6,10 @@
 
   outputs = { nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import nixpkgs { inherit system; };
+      let pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+      };
       in {
         devShells.default = pkgs.mkShell {
           name = "scala";
@@ -16,6 +19,8 @@
             scala-cli
             azure-cli
             azure-functions-core-tools
+            terraform
+            tfsec
           ];
 
           shellHook = ''

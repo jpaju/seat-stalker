@@ -45,10 +45,35 @@ jobs:
       - name: Build and run integration tests
         run: nix develop --command sbt integration/test
 
+  terraform-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Terraform Format Check
+        run: nix develop --command terraform fmt -check -recursive
+        working-directory: ./infrastructure
+
+      - name: Terraform Init
+        run: nix develop --command terraform init -backend=false
+        working-directory: ./infrastructure
+
+      - name: Terraform Validate
+        run: nix develop --command terraform validate
+        working-directory: ./infrastructure
+
+      - name: Terraform Security Scan
+        run: nix develop --command tfsec .
+        working-directory: ./infrastructure
+
   build-and-deploy:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [format-check, unit-test, integration-test]
+    needs: [format-check, unit-test, integration-test, terraform-validation]
     environment: Production
     concurrency:
       group: production-deployment
