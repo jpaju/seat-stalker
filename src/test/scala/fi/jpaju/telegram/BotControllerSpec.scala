@@ -46,6 +46,7 @@ object BotControllerSpec extends ZIOSpecDefault:
   ).provide(
     FakeTelegramClient.layer,
     LiveBotCommandHandler.layer,
+    LiveMessageFormatter.layer,
     InMemoryStalkerJobRepository.layerFromJobs(Set.empty)
   )
 

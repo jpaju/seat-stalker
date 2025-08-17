@@ -18,7 +18,8 @@ trait StalkerJobRunner:
 
 case class LiveStalkerJobRunner(
     tableService: TableService,
-    telegramClient: TelegramClient
+    telegramClient: TelegramClient,
+    messageFormatter: MessageFormatter
 ) extends StalkerJobRunner:
   def runJob(jobDefinition: StalkerJobDefinition): UIO[Unit] =
     val spanName = s"stalker-job-${jobDefinition.restaurant.name}-${jobDefinition.persons}"
@@ -54,7 +55,7 @@ case class LiveStalkerJobRunner(
   end checkTables
 
   private def sendNotifications(restaurant: Restaurant, availableTables: List[AvailableTable]): UIO[Unit] =
-    val message = MessageFormatter.tablesAvailableMessage(restaurant, availableTables)
+    val message = messageFormatter.tablesAvailableMessage(restaurant, availableTables)
 
     telegramClient
       .sendMessage(message)

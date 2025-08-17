@@ -2,10 +2,16 @@ package fi.jpaju.telegram
 
 import fi.jpaju.restaurant.*
 import fi.jpaju.stalker.*
+import zio.*
 
 import java.time.format.DateTimeFormatter
 
-object MessageFormatter:
+trait MessageFormatter:
+  def tablesAvailableMessage(restaurant: Restaurant, availableTables: List[AvailableTable]): TelegramMessageBody
+  def formatEcho(message: String): TelegramMessageBody
+  def formatJobsList(jobs: Set[StalkerJobDefinition]): TelegramMessageBody
+
+class LiveMessageFormatter extends MessageFormatter:
   private val dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm d.M.yyyy");
 
   def tablesAvailableMessage(restaurant: Restaurant, availableTables: List[AvailableTable]): TelegramMessageBody =
@@ -34,3 +40,6 @@ object MessageFormatter:
 
   private def personText(count: PersonCount): String =
     if count == PersonCount(1) then "person" else "people"
+
+object LiveMessageFormatter:
+  val layer = ZLayer.succeed(LiveMessageFormatter())

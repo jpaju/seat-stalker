@@ -32,6 +32,7 @@ object IntegrationTestSpec extends ZIOSpecDefault:
   ).provide(
     LiveStalkerApp.layer,
     LiveStalkerJobRunner.layer,
+    LiveMessageFormatter.layer,
     InMemoryStalkerJobRepository.layerFromJobs(Set.empty),
     FakeTelegramClient.layer,
     FakeTableService.layer,
@@ -39,4 +40,4 @@ object IntegrationTestSpec extends ZIOSpecDefault:
   )
 
   def toExpectedMessage(restaurant: Restaurant, availableTable: AvailableTable) =
-    MessageFormatter.tablesAvailableMessage(restaurant, List(availableTable))
+    LiveMessageFormatter().tablesAvailableMessage(restaurant, List(availableTable))

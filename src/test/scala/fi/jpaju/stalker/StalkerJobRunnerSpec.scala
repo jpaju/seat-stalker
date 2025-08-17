@@ -65,6 +65,7 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
     }
   ).provide(
     LiveStalkerJobRunner.layer,
+    LiveMessageFormatter.layer,
     FakeTelegramClient.layer,
     FakeTableService.layer,
     Runtime.removeDefaultLoggers
