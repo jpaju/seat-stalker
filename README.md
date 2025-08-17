@@ -10,6 +10,10 @@ Application for notifying about free seats in popular restaurants. Uses telegram
 - [x] Terraform to manage infrastructure
 - [ ] Add persistence
   - [ ] Store sent notifications so there are not duplicate notification about the same seat
+  - [Neon](https://neon.com/)
+  - [Supabase](https://supabase.com/)
+  - [CockroachDB serverless](https://www.cockroachlabs.com/lp/serverless/)
+  - [Azure SQL](https://azure.microsoft.com/en-us/products/azure-sql/database)
 - [ ] Telegram bot webhook
   - [x] Check `secret_token` from request header
   - [ ] Support adding new restaurants dynamically
@@ -56,3 +60,31 @@ The `.env` file should be loaded into your environment. If using nix-direnv or d
 3. Build the application: `sbt assembly`
 4. Navigate to `azure-functions` folder
 5. Start the function: `func start`
+
+## Infrastructure Setup
+
+The application infrastructure is managed with Terraform and applied as part of deployment process in GitHub Actions.
+
+### Prerequisites
+
+1. **Azure setup**
+   - Create an Azure subscription
+   - Create a service principal for GitHub Actions:
+     ```bash
+     az ad sp create-for-rbac --name "seat-stalker-github" --role contributor --scopes /subscriptions/{subscription-id} --json-auth
+     ```
+   - Create storage account for Terraform state:
+     ```bash
+     az group create --name <resource-group> --location <location>
+     az storage account create --name <storage-account> --resource-group <resource-group> --location <location> --sku Standard_LRS
+     az storage container create --name tfstate --account-name <storage-account>
+     ```
+2. **GitHub secrets**
+   Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+   - `AZURE_SUBSCRIPTION_ID` - Your Azure subscription ID
+   - `AZURE_CREDENTIALS` - JSON output from service principal creation
+     - Required properties: `clientId`,` clientSecret`,` subscriptionId`,` tenantId`
+   - `TELEGRAM_CHAT_ID` - Your Telegram chat ID
+   - `TELEGRAM_BOT_TOKEN` - Your Telegram bot token
+   - `TELEGRAM_SECRET_TOKEN` - Your Telegram secret token
+   - `EMAIL_ALERT_RECIPIENT` - Email for Azure alerts
