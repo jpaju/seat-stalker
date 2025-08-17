@@ -14,7 +14,7 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
         // Given
         telegramClient <- ZIO.service[FakeTelegramClient]
         jobRepository  <- ZIO.service[StalkerJobRepository]
-        handler         = LiveBotCommandHandler(telegramClient, jobRepository)
+        handler         = LiveBotCommandHandler(telegramClient, jobRepository, DefaultMessageFormatter)
         msg             = "Hello world!"
 
         // When
@@ -29,7 +29,7 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
         // Given
         telegramClient <- ZIO.service[FakeTelegramClient]
         jobRepository  <- ZIO.service[StalkerJobRepository]
-        handler         = LiveBotCommandHandler(telegramClient, jobRepository)
+        handler         = LiveBotCommandHandler(telegramClient, jobRepository, DefaultMessageFormatter)
 
         // When
         _ <- handler.handle(BotCommand.ListJobs, randomContext())
@@ -50,7 +50,7 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
                             StalkerJobDefinition(bar, PersonCount(4))
                           )
         _              <- ZIO.foreach(jobs)(jobRepository.saveJob(_))
-        handler         = LiveBotCommandHandler(telegramClient, jobRepository)
+        handler         = LiveBotCommandHandler(telegramClient, jobRepository, DefaultMessageFormatter)
 
         // When
         _ <- handler.handle(BotCommand.ListJobs, randomContext())

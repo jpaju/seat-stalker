@@ -37,6 +37,7 @@ class TelegramWebhookFunction:
         LiveBotController.layer,
         LiveBotCommandHandler.layer,
         StalkerApp.hardcodedJobsRepositoryLayer,
+        DefaultMessageFormatter.layer,
         LiveTelegramClient.layer,
         HttpClientZioBackend.layer()
       )

@@ -8,19 +8,20 @@ trait BotCommandHandler:
 
 class LiveBotCommandHandler(
     telegramClient: TelegramClient,
-    stalkerJobRepository: StalkerJobRepository
+    stalkerJobRepository: StalkerJobRepository,
+    messageFormatter: MessageFormatter
 ) extends BotCommandHandler:
 
   def handle(command: BotCommand, context: MessageContext): IO[MessageDeliveryError, Unit] =
     command match
       case BotCommand.Echo(message) =>
-        val messageBody = MessageFormatter.formatEcho(message)
+        val messageBody = messageFormatter.formatEcho(message)
         telegramClient.sendMessage(messageBody)
 
       case BotCommand.ListJobs =>
         for
           jobs       <- stalkerJobRepository.getAll
-          messageBody = MessageFormatter.formatJobsList(jobs)
+          messageBody = messageFormatter.formatJobsList(jobs)
           _          <- telegramClient.sendMessage(messageBody)
         yield ()
 

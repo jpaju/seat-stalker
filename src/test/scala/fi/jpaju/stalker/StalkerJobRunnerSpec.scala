@@ -3,6 +3,7 @@ package stalker
 
 import fi.jpaju.restaurant.*
 import fi.jpaju.telegram.*
+import fi.jpaju.util.*
 import zio.*
 import zio.stream.*
 
@@ -65,6 +66,7 @@ object StalkerJobRunnerSpec extends ZIOSpecDefault:
     }
   ).provide(
     LiveStalkerJobRunner.layer,
+    DefaultMessageFormatter.layer,
     FakeTelegramClient.layer,
     FakeTableService.layer,
     Runtime.removeDefaultLoggers

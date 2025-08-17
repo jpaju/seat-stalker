@@ -2,10 +2,18 @@ package fi.jpaju.telegram
 
 import fi.jpaju.restaurant.*
 import fi.jpaju.stalker.*
+import zio.*
 
 import java.time.format.DateTimeFormatter
 
-object MessageFormatter:
+trait MessageFormatter:
+  def tablesAvailableMessage(restaurant: Restaurant, availableTables: List[AvailableTable]): TelegramMessageBody
+  def formatEcho(message: String): TelegramMessageBody
+  def formatJobsList(jobs: Set[StalkerJobDefinition]): TelegramMessageBody
+
+object DefaultMessageFormatter extends MessageFormatter:
+  val layer = ZLayer.succeed(DefaultMessageFormatter)
+
   private val dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm d.M.yyyy");
 
   def tablesAvailableMessage(restaurant: Restaurant, availableTables: List[AvailableTable]): TelegramMessageBody =

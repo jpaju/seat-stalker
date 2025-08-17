@@ -1,10 +1,10 @@
 package fi.jpaju
 
 import zio.*
-import fi.jpaju.stalker.*
 import sttp.client3.httpclient.zio.HttpClientZioBackend
+import fi.jpaju.stalker.*
 import fi.jpaju.restaurant.TableOnlineIntegration
-import fi.jpaju.telegram.LiveTelegramClient
+import fi.jpaju.telegram.*
 
 object Main extends ZIOAppDefault:
   val run = ZIO
@@ -13,6 +13,7 @@ object Main extends ZIOAppDefault:
       LiveStalkerApp.layer,
       LiveStalkerJobRunner.layer,
       StalkerApp.hardcodedJobsRepositoryLayer,
+      DefaultMessageFormatter.layer,
       HttpClientZioBackend.layer(),
       TableOnlineIntegration.layer,
       LiveTelegramClient.layer
