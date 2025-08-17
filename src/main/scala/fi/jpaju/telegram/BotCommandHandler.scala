@@ -14,23 +14,15 @@ class LiveBotCommandHandler(
   def handle(command: BotCommand, context: MessageContext): IO[MessageDeliveryError, Unit] =
     command match
       case BotCommand.Echo(message) =>
-        val response    = s"Echo: $message" // TODO Factor message formatting to separate file/class
-        val messageBody = TelegramMessageBody.wrap(response)
+        val messageBody = MessageFormatter.formatEcho(message)
         telegramClient.sendMessage(messageBody)
 
       case BotCommand.ListJobs =>
         for
           jobs       <- stalkerJobRepository.getAll
-          response    = formatJobsList(jobs) // TODO Factor message formatting to separate file/class
-          messageBody = TelegramMessageBody.wrap(response)
+          messageBody = MessageFormatter.formatJobsList(jobs)
           _          <- telegramClient.sendMessage(messageBody)
         yield ()
-
-  private def formatJobsList(jobs: Set[StalkerJobDefinition]): String =
-    if jobs.isEmpty then "No active jobs currently."
-    else
-      val jobsText = jobs.map(job => s"• ${job.restaurant.name} - ${job.persons} persons")
-      s"Current monitoring jobs:\n${jobsText.mkString("\n")}"
 
 object LiveBotCommandHandler:
   val layer = ZLayer.fromFunction(LiveBotCommandHandler.apply)

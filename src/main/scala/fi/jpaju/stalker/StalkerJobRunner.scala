@@ -54,16 +54,11 @@ case class LiveStalkerJobRunner(
   end checkTables
 
   private def sendNotifications(restaurant: Restaurant, availableTables: List[AvailableTable]): UIO[Unit] =
-    val message         = MessageFormatter.tablesAvailableMessage(restaurant, availableTables)
-    val telegramMessage = ZIO
-      .fromEither(TelegramMessageBody.make(message).toEither)
-      .orDieWith(validationErrs => new RuntimeException(s"Telegram message was nonempty: ${validationErrs.toString}"))
+    val message = MessageFormatter.tablesAvailableMessage(restaurant, availableTables)
 
-    telegramMessage
-      .flatMap(telegramClient.sendMessage(_))
-      .tapError(err =>
-        ZIO.logError(s"Encountered an error: $err, when trying to notify about tables: $availableTables")
-      )
+    telegramClient
+      .sendMessage(message)
+      .logError(s"Encountered an error when trying to notify about tables: $availableTables")
       .orDieWith(err => new RuntimeException(s"Failed to notify about available tables: $err"))
 
 object LiveStalkerJobRunner:

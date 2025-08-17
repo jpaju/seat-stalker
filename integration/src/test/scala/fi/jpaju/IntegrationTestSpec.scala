@@ -1,6 +1,7 @@
 package fi.jpaju
 
 import fi.jpaju.restaurant.*
+import fi.jpaju.telegram.*
 import fi.jpaju.stalker.*
 import fi.jpaju.util.*
 
