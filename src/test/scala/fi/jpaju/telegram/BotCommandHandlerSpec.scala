@@ -36,7 +36,7 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
 
         // Then
         sentMessages <- FakeTelegramClient.getSentMessages
-      yield assertTrue(sentMessages.head == "No active jobs currently.")
+      yield assertTrue(sentMessages.head == "📭 No active monitoring jobs currently.")
     },
     test("should send formatted jobs list when handling ListJobs command with existing jobs") {
       for
@@ -58,8 +58,8 @@ object BotCommandHandlerSpec extends ZIOSpecDefault:
         // Then
         sentMessages <- FakeTelegramClient.getSentMessages
       yield assertTrue(
-        sentMessages.head.contains("Foo - 2 persons"),
-        sentMessages.head.contains("Bar - 4 persons")
+        sentMessages.head.contains("Foo - 2 people"),
+        sentMessages.head.contains("Bar - 4 people")
       )
     }
   ).provide(

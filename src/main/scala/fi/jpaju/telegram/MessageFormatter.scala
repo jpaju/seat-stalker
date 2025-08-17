@@ -12,19 +12,25 @@ object MessageFormatter:
     val tables = availableTables
       .map { table =>
         val formattedTime = table.time.format(dateTimeFormatter)
-        s"Table for ${table.persons} on $formattedTime"
+        s"🪑 Table for ${table.persons} ${personText(table.persons)} at $formattedTime"
       }
-      .mkString("\n - ")
+      .mkString("\n")
 
-    TelegramMessageBody.wrap(s"Free tables available in ${restaurant.name} 🍔:\n - $tables")
+    TelegramMessageBody.wrap(s"🎉 Great news! Free tables available at ${restaurant.name} 🍽️\n\n$tables")
 
   def formatEcho(message: String): TelegramMessageBody =
-    TelegramMessageBody.wrap(s"Echo: $message")
+    TelegramMessageBody.wrap(s"🔊 Echo: $message")
 
   def formatJobsList(jobs: Set[StalkerJobDefinition]): TelegramMessageBody =
     val text =
-      if jobs.isEmpty then "No active jobs currently."
+      if jobs.isEmpty then "📭 No active monitoring jobs currently."
       else
-        val jobsText = jobs.map(job => s"• ${job.restaurant.name} - ${job.persons} persons")
-        s"Current monitoring jobs:\n${jobsText.mkString("\n")}"
+        val jobsText = jobs.map { job =>
+          s"🔍 ${job.restaurant.name} - ${job.persons} ${personText(job.persons)}"
+        }
+        s"📋 Current monitoring jobs:\n\n${jobsText.mkString("\n")}"
+
     TelegramMessageBody.wrap(text)
+
+  private def personText(count: PersonCount): String =
+    if count == PersonCount(1) then "person" else "people"
