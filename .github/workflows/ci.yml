@@ -136,7 +136,7 @@ jobs:
         uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Download Terraform Plan
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: terraform-plan
           path: infrastructure/
