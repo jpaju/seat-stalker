@@ -36,6 +36,12 @@ resource "azurerm_storage_account" "az_storage_account" {
   allow_nested_items_to_be_public = false
 }
 
+resource "azurerm_storage_container" "deployment_container" {
+  name                  = "app-package-func-${var.project_name}"
+  storage_account_id    = azurerm_storage_account.az_storage_account.id
+  container_access_type = "private"
+}
+
 
 # ================================================ Function App & Plan ================================================
 
@@ -47,17 +53,30 @@ resource "azurerm_service_plan" "az_app_service_plan" {
   sku_name            = "Y1"
 }
 
-resource "azurerm_linux_function_app" "az_function_app" {
+resource "azurerm_service_plan" "az_app_service_plan_flex" {
+  name                = "flex-plan-${var.project_name}"
+  resource_group_name = azurerm_resource_group.az_resource_group.name
+  location            = azurerm_resource_group.az_resource_group.location
+  os_type             = "Linux"
+  sku_name            = "FC1"
+}
+
+resource "azurerm_function_app_flex_consumption" "az_function_app" {
   name                = "func-${var.project_name}"
   resource_group_name = azurerm_resource_group.az_resource_group.name
   location            = azurerm_resource_group.az_resource_group.location
+  service_plan_id     = azurerm_service_plan.az_app_service_plan_flex.id
 
-  storage_account_name       = azurerm_storage_account.az_storage_account.name
-  storage_account_access_key = azurerm_storage_account.az_storage_account.primary_access_key
-  service_plan_id            = azurerm_service_plan.az_app_service_plan.id
+  storage_container_type      = "blobContainer"
+  storage_container_endpoint  = "${azurerm_storage_account.az_storage_account.primary_blob_endpoint}${azurerm_storage_container.deployment_container.name}"
+  storage_authentication_type = "StorageAccountConnectionString"
+  storage_access_key          = azurerm_storage_account.az_storage_account.primary_access_key
 
-  functions_extension_version = "~4"
-  client_certificate_mode     = "Required"
+  https_only              = true
+  client_certificate_mode = "Required"
+
+  runtime_name    = "java"
+  runtime_version = "21"
 
   app_settings = {
     "WEBSITE_MOUNT_ENABLED" = "1"
@@ -66,18 +85,9 @@ resource "azurerm_linux_function_app" "az_function_app" {
     "TELEGRAM_SECRETTOKEN"  = var.telegram_secret_token
   }
 
-  https_only              = true
-  builtin_logging_enabled = false
-
   site_config {
     application_insights_connection_string = azurerm_application_insights.az_application_insights.connection_string
     application_insights_key               = azurerm_application_insights.az_application_insights.instrumentation_key
-
-    ftps_state = "Disabled"
-
-    application_stack {
-      java_version = "21"
-    }
   }
 
   tags = {
