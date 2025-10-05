@@ -57,27 +57,27 @@ jobs:
         uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Terraform Format Check
-        run: nix develop .#infrastructure --command terraform fmt -check -recursive
         working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform fmt -check -recursive
 
       - name: Terraform Init
-        run: nix develop .#infrastructure --command terraform init -backend=false -input=false
         working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform init -backend=false -input=false
 
       - name: Terraform Validate
-        run: nix develop .#infrastructure --command terraform validate
         working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform validate
 
       - name: Terraform Security Scan
-        run: nix develop .#infrastructure --command tfsec .
         working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command tfsec .
 
   terraform-plan:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    needs: [scala-lint, unit-test, integration-test, terraform-lint]
+    needs: [terraform-lint]
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout GitHub Action"
+      - name: Checkout GitHub Action
         uses: actions/checkout@v5
 
       - name: Install Nix
@@ -91,12 +91,12 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        run: nix develop .#infrastructure --command terraform init -input=false
         working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform init -input=false
 
       - name: Terraform Plan
-        run: nix develop .#infrastructure --command terraform plan -out=tfplan -input=false
         working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform plan -out=tfplan -input=false
         env:
           TF_VAR_telegram_chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
           TF_VAR_telegram_bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -127,7 +127,7 @@ jobs:
       group: terraform-apply
       cancel-in-progress: false
     steps:
-      - name: "Checkout GitHub Action"
+      - name: Checkout GitHub Action
         uses: actions/checkout@v5
 
       - name: Install Nix
@@ -147,19 +147,19 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform Init
-        run: nix develop .#infrastructure --command terraform init -input=false
         working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform init -input=false
 
       - name: Terraform Apply
-        run: nix develop .#infrastructure --command terraform apply -input=false tfplan
         working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform apply -input=false tfplan
 
   build:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [terraform-apply]
+    needs: [scala-lint, unit-test, integration-test]
     steps:
-      - name: "Checkout GitHub Action"
+      - name: Checkout GitHub Action
         uses: actions/checkout@v5
 
       - name: Install Nix
@@ -177,14 +177,19 @@ jobs:
 
   deploy:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    needs: [build]
+    needs: [build, terraform-apply]
     runs-on: ubuntu-latest
     concurrency:
       group: application-deployment
       cancel-in-progress: false
     steps:
-      - name: "Checkout GitHub Action"
+      - name: Checkout GitHub Action
         uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Setup Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Download JAR artifact
         uses: actions/download-artifact@v5
@@ -205,9 +210,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@main
-
       - name: Deploy to Azure Functions
         run: |
           nix develop .#infrastructure --command \
@@ -215,4 +217,3 @@ jobs:
               --resource-group rg-seat-stalker \
               --name func-seat-stalker \
               --src azure-functions/deployment.zip
-
