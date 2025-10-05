@@ -154,14 +154,10 @@ jobs:
         run: nix develop .#infrastructure --command terraform apply -input=false tfplan
         working-directory: ./infrastructure
 
-  build-and-deploy:
+  build:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: [terraform-apply]
-    runs-on: ubuntu-latest
-    concurrency:
-      group: application-deployment
-      cancel-in-progress: false
     steps:
       - name: "Checkout GitHub Action"
         uses: actions/checkout@v5
@@ -172,10 +168,29 @@ jobs:
       - name: Build JAR
         run: nix develop --command sbt -v assembly
 
-      - name: Azure Login
-        uses: azure/login@v2
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          name: application-jar
+          path: azure-functions/*.jar
+          retention-days: 30
+
+  deploy:
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    needs: [build]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: application-deployment
+      cancel-in-progress: false
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@v5
+
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: application-jar
+          path: azure-functions/
 
       - name: Create deployment package
         working-directory: ./azure-functions
@@ -184,6 +199,14 @@ jobs:
             host.json \
             */function.json \
             *.jar
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
 
       - name: Deploy to Azure Functions
         run: |
