@@ -126,6 +126,9 @@ jobs:
     concurrency:
       group: terraform-apply
       cancel-in-progress: false
+    outputs:
+      resource_group_name: ${{ steps.tf_outputs.outputs.resource_group_name }}
+      function_app_name: ${{ steps.tf_outputs.outputs.function_app_name }}
     steps:
       - name: Checkout GitHub Action
         uses: actions/checkout@v5
@@ -153,6 +156,13 @@ jobs:
       - name: Terraform Apply
         working-directory: ./infrastructure
         run: nix develop .#infrastructure --command terraform apply -input=false tfplan
+
+      - name: Export Terraform Outputs
+        id: tf_outputs
+        working-directory: ./infrastructure
+        run: |
+          echo "resource_group_name=$(nix develop .#infrastructure --command terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+          echo "function_app_name=$(nix develop .#infrastructure --command terraform output -raw function_app_name)" >> $GITHUB_OUTPUT
 
   build:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
@@ -211,9 +221,12 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Functions
+        env:
+          RESOURCE_GROUP: ${{ needs.terraform-apply.outputs.resource_group_name }}
+          FUNCTION_APP_NAME: ${{ needs.terraform-apply.outputs.function_app_name }}
         run: |
           nix develop .#infrastructure --command \
             az functionapp deployment source config-zip \
-              --resource-group rg-seat-stalker \
-              --name func-seat-stalker \
+              --resource-group $RESOURCE_GROUP \
+              --name $FUNCTION_APP_NAME \
               --src azure-functions/deployment.zip
