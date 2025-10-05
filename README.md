@@ -8,6 +8,7 @@ Application for notifying about free seats in popular restaurants. Uses telegram
 - [x] Format sent telegram messages nicely
 - [x] CI Pipeline to deploy as scheduled Azure Function
 - [x] Terraform to manage infrastructure
+- [ ] Support multiple chat ids: in webhook use chat id from request and in timer, store chat id where to send the results to
 - [ ] Add persistence
   - [ ] Store sent notifications so there are not duplicate notification about the same seat
   - [Neon](https://neon.com/)
@@ -81,7 +82,6 @@ The application infrastructure is managed with Terraform and applied as part of 
      ```
 2. **GitHub secrets**
    Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
-   - `AZURE_SUBSCRIPTION_ID` - Your Azure subscription ID
    - `AZURE_CREDENTIALS` - JSON output from service principal creation
      - Required properties: `clientId`,` clientSecret`,` subscriptionId`,` tenantId`
    - `TELEGRAM_CHAT_ID` - Your Telegram chat ID
