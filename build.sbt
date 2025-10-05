@@ -8,7 +8,7 @@ version := "0.1.0-SNAPSHOT"
 // COMPILER CONFIGURATION
 // ===========================================================================================
 
-ThisBuild / scalaVersion := "3.7.2"
+ThisBuild / scalaVersion := "3.7.3"
 ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
