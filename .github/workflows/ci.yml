@@ -112,7 +112,7 @@ jobs:
           working-directory: ./infrastructure
 
       - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: terraform-plan
           path: infrastructure/tfplan
@@ -139,7 +139,7 @@ jobs:
         uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Download Terraform Plan
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: terraform-plan
           path: infrastructure/
@@ -179,7 +179,7 @@ jobs:
         run: nix develop --command sbt -v assembly
 
       - name: Upload JAR artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: application-jar
           path: azure-functions/*.jar
@@ -202,7 +202,7 @@ jobs:
         uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Download JAR artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: application-jar
           path: azure-functions/
