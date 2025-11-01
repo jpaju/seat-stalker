@@ -1,0 +1,52 @@
+name: Unlock Terraform state
+
+on:
+  workflow_dispatch:
+
+jobs:
+  unlock-state:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Setup Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Attempt Terraform Force Unlock
+        working-directory: ./infrastructure
+        continue-on-error: true
+        run: |
+          LOCK_ID=$(nix develop .#infrastructure --command terraform plan 2>&1 | grep -oP 'ID:\s+ \K[a-f0-9-]+' | head -1)
+          if [ -n "$LOCK_ID" ]; then
+            echo "Found lock ID: $LOCK_ID"
+            nix develop .#infrastructure --command terraform force-unlock -force "$LOCK_ID"
+          fi
+
+      - name: Break Terraform State Lock
+        working-directory: ./infrastructure
+        run: |
+          nix develop .#infrastructure --command \
+            az storage blob lease break \
+              --account-name safuncseatstalker \
+              --container-name tfstate \
+              --blob-name terraform.tfstate
+
+      - name: Verify State is Unlocked
+        working-directory: ./infrastructure
+        run: |
+          nix develop .#infrastructure --command terraform init -input=false
+          nix develop .#infrastructure --command terraform plan -input=false -detailed-exitcode || true
+        env:
+          TF_VAR_telegram_chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TF_VAR_telegram_bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TF_VAR_telegram_secret_token: ${{ secrets.TELEGRAM_SECRET_TOKEN }}
+          TF_VAR_email_alert_recipient: ${{ secrets.EMAIL_ALERT_RECIPIENT }}
