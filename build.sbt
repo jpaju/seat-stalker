@@ -56,7 +56,7 @@ ThisBuild / wartremoverExcluded ++= Seq(
 // DEPENDENCY VERSIONS
 // ===========================================================================================
 
-val zioVersion         = "2.1.21"
+val zioVersion         = "2.1.22"
 val zioConfigVersion   = "4.0.5"
 val zioLoggingVersion  = "2.5.1"
 val zioJsonVersion     = "0.7.44"
