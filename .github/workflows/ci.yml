@@ -76,6 +76,9 @@ jobs:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     needs: [terraform-lint]
     runs-on: ubuntu-latest
+    concurrency:
+      group: terraform
+      cancel-in-progress: false # Cancelling could lead to state lock corruption
     steps:
       - name: Checkout GitHub Action
         uses: actions/checkout@v6
@@ -124,7 +127,7 @@ jobs:
     needs: [terraform-plan]
     environment: Production
     concurrency:
-      group: terraform-apply
+      group: terraform
       cancel-in-progress: false
     outputs:
       resource_group_name: ${{ steps.tf_outputs.outputs.resource_group_name }}
