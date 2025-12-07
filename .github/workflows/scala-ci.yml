@@ -1,0 +1,56 @@
+name: Scala CI
+
+on:
+  workflow_call:
+  push:
+    branches-ignore: [master]
+    paths:
+      - ".github/**"
+      - "src/**"
+      - "project/**"
+      - "integration/**"
+      - "*.sbt"
+      - ".scalafmt.conf"
+      - "flake.nix"
+      - "flake.lock"
+
+env:
+  JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
+  JVM_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
+
+      - name: Check code formatting
+        run: nix develop --command sbt scalafmtCheckAll scalafmtSbtCheck
+
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
+
+      - name: Run unit tests
+        run: nix develop --command sbt test
+
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
+
+      - name: Run integration tests
+        run: nix develop --command sbt integration/test

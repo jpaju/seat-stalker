@@ -1,86 +1,28 @@
-name: CI
+name: Deploy
 
 on:
   push:
+    branches: [master]
 
 env:
-  # define Java options for both official sbt and sbt-extras
   JAVA_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
   JVM_OPTS: -Xms2048M -Xmx2048M -Xss6M -XX:ReservedCodeCacheSize=256M -Dfile.encoding=UTF-8
 
 jobs:
-  scala-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+  scala-ci:
+    uses: ./.github/workflows/scala-ci.yml
 
-      - name: Setup Nix
-        uses: ./.github/actions/setup-nix
-
-      - name: Check code formatting
-        run: nix develop --command sbt scalafmtCheckAll scalafmtSbtCheck
-
-  unit-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Nix
-        uses: ./.github/actions/setup-nix
-
-      - name: Build and run unit tests
-        run: nix develop --command sbt test
-
-  integration-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Nix
-        uses: ./.github/actions/setup-nix
-
-      - name: Build and run integration tests
-        run: nix develop --command sbt integration/test
-
-  terraform-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Nix
-        uses: ./.github/actions/setup-nix
-        with:
-          enable-cache: true
-
-      - name: Terraform Format Check
-        working-directory: ./infrastructure
-        run: nix develop .#infrastructure --command terraform fmt -check -recursive
-
-      - name: Terraform Init
-        working-directory: ./infrastructure
-        run: nix develop .#infrastructure --command terraform init -backend=false -input=false
-
-      - name: Terraform Validate
-        working-directory: ./infrastructure
-        run: nix develop .#infrastructure --command terraform validate
-
-      - name: Terraform Security Scan
-        working-directory: ./infrastructure
-        run: nix develop .#infrastructure --command tfsec .
+  terraform-ci:
+    uses: ./.github/workflows/terraform-ci.yml
 
   terraform-plan:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    needs: [terraform-lint]
+    needs: [terraform-ci, scala-ci]
     runs-on: ubuntu-latest
     concurrency:
-      group: terraform
-      cancel-in-progress: false # Cancelling could lead to state lock corruption
+      group: terraform-state-access
+      cancel-in-progress: true
     steps:
-      - name: Checkout GitHub Action
+      - name: Checkout
         uses: actions/checkout@v6
 
       - name: Setup Nix
@@ -122,18 +64,17 @@ jobs:
           retention-days: 7
 
   terraform-apply:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
     needs: [terraform-plan]
+    runs-on: ubuntu-latest
     environment: Production
     concurrency:
-      group: terraform
+      group: terraform-state-access
       cancel-in-progress: false
     outputs:
       resource_group_name: ${{ steps.tf_outputs.outputs.resource_group_name }}
       function_app_name: ${{ steps.tf_outputs.outputs.function_app_name }}
     steps:
-      - name: Checkout GitHub Action
+      - name: Checkout
         uses: actions/checkout@v6
 
       - name: Setup Nix
@@ -168,11 +109,10 @@ jobs:
           echo "function_app_name=$(nix develop .#infrastructure --command terraform output -raw function_app_name)" >> $GITHUB_OUTPUT
 
   build:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    needs: [terraform-ci, scala-ci]
     runs-on: ubuntu-latest
-    needs: [scala-lint, unit-test, integration-test]
     steps:
-      - name: Checkout GitHub Action
+      - name: Checkout
         uses: actions/checkout@v6
 
       - name: Setup Nix
@@ -189,14 +129,13 @@ jobs:
           retention-days: 30
 
   deploy:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     needs: [build, terraform-apply]
     runs-on: ubuntu-latest
     concurrency:
       group: application-deployment
       cancel-in-progress: false
     steps:
-      - name: Checkout GitHub Action
+      - name: Checkout
         uses: actions/checkout@v6
 
       - name: Setup Nix

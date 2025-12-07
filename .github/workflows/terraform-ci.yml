@@ -1,0 +1,39 @@
+name: Terraform CI
+
+on:
+  workflow_call:
+  push:
+    branches-ignore: [master]
+    paths:
+      - ".github/**"
+      - "infrastructure/**"
+      - "flake.nix"
+      - "flake.lock"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
+        with:
+          enable-cache: true
+
+      - name: Terraform Init
+        working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform init -backend=false -input=false
+
+      - name: Terraform Format Check
+        working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command terraform validate
+
+      - name: Terraform Security Scan
+        working-directory: ./infrastructure
+        run: nix develop .#infrastructure --command tfsec .
