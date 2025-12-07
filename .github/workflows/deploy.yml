@@ -63,6 +63,26 @@ jobs:
           path: infrastructure/tfplan
           retention-days: 7
 
+  build:
+    needs: [terraform-ci, scala-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Nix
+        uses: ./.github/actions/setup-nix
+
+      - name: Build JAR
+        run: nix develop --command sbt -v assembly
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: application-jar
+          path: azure-functions/*.jar
+          retention-days: 30
+
   terraform-apply:
     needs: [terraform-plan]
     runs-on: ubuntu-latest
@@ -107,26 +127,6 @@ jobs:
         run: |
           echo "resource_group_name=$(nix develop .#infrastructure --command terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
           echo "function_app_name=$(nix develop .#infrastructure --command terraform output -raw function_app_name)" >> $GITHUB_OUTPUT
-
-  build:
-    needs: [terraform-ci, scala-ci]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Nix
-        uses: ./.github/actions/setup-nix
-
-      - name: Build JAR
-        run: nix develop --command sbt -v assembly
-
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: application-jar
-          path: azure-functions/*.jar
-          retention-days: 30
 
   deploy:
     needs: [build, terraform-apply]
