@@ -15,7 +15,6 @@ ThisBuild / scalacOptions ++= Seq(
   "-explain",
   "-language:implicitConversions",
   "-Ycheck-all-patmat",
-  "-Ycheck-reentrant",
   "-Xkind-projector",
   "-Wsafe-init"
 ) ++ Seq("-source", "future")
