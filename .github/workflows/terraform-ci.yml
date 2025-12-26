@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup Nix
-        uses: ./.github/actions/setup-nix
+        uses: jpaju/gh-commons/actions/setup-nix@main
         with:
           enable-cache: true
 
