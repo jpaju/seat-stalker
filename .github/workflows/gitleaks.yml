@@ -1,0 +1,9 @@
+name: Gitleaks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  scan:
+    uses: jpaju/gh-commons/.github/workflows/gitleaks.yml@main
