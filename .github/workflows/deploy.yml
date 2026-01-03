@@ -55,7 +55,7 @@ jobs:
           working-directory: ./infrastructure
 
       - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: terraform-plan
           path: infrastructure/tfplan
@@ -75,7 +75,7 @@ jobs:
         run: nix develop --command sbt -v assembly
 
       - name: Upload JAR artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: application-jar
           path: azure-functions/*.jar
@@ -101,7 +101,7 @@ jobs:
           enable-cache: true
 
       - name: Download Terraform Plan
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: terraform-plan
           path: infrastructure/
@@ -142,7 +142,7 @@ jobs:
           enable-cache: true
 
       - name: Download JAR artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: application-jar
           path: azure-functions/
