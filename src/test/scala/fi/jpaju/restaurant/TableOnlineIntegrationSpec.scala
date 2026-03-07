@@ -1,8 +1,8 @@
 package fi.jpaju
 package restaurant
 
-import sttp.client3.*
-import sttp.client3.testing.*
+import sttp.client4.*
+import sttp.client4.testing.*
 import sttp.model.*
 import zio.*
 import zio.stream.*
@@ -13,9 +13,9 @@ import java.time.*
 object TableOnlineServiceSpec extends ZIOSpecDefault:
   override def spec = suite("TableOnlineServiceSpec")(
     test("make request with correct url and parameters") {
-      val recordingBackend = new RecordingSttpBackend(
+      val recordingBackend = RecordingBackend(
         HttpClientZioBackend.stub.whenAnyRequest
-          .thenRespond(noTablesAvailableJson)
+          .thenRespondAdjust(noTablesAvailableJson)
       )
 
       val parameters = CheckTablesParameters(
@@ -41,7 +41,7 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
     },
     test("when next_available_date is null, then returns emppty stream") {
       val sttpBackendStub = HttpClientZioBackend.stub.whenAnyRequest
-        .thenRespond(noTablesAvailableJson)
+        .thenRespondAdjust(noTablesAvailableJson)
 
       withTableOnlineService(sttpBackendStub) { service =>
         for results <- service.checkAvailableTables(defaultParameters).collectToList
@@ -58,9 +58,9 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       val sttpBackendStub = HttpClientZioBackend.stub
         .whenRequestMatchesPartial({
           case r if queriedDateIs(r.uri, defaultParameters.startingFrom) =>
-            Response.ok(tablesAvailableNowJson(responseData))
+            ResponseStub.adjust(tablesAvailableNowJson(responseData))
 
-          case _ => Response.ok(noTablesAvailableJson)
+          case _ => ResponseStub.adjust(noTablesAvailableJson)
         })
 
       withTableOnlineService(sttpBackendStub) { service =>
@@ -84,12 +84,12 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       val sttpBackendStub = HttpClientZioBackend.stub
         .whenRequestMatchesPartial({
           case r if queriedDateIs(r.uri, now) =>
-            Response.ok(tablesAvailableLaterJson(later))
+            ResponseStub.adjust(tablesAvailableLaterJson(later))
 
           case r if queriedDateIs(r.uri, later) =>
-            Response.ok(tablesAvailableNowJson(nextAvailableTables))
+            ResponseStub.adjust(tablesAvailableNowJson(nextAvailableTables))
 
-          case _ => Response.ok(noTablesAvailableJson)
+          case _ => ResponseStub.adjust(noTablesAvailableJson)
         })
 
       withTableOnlineService(sttpBackendStub) { service =>
@@ -119,9 +119,9 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       val sttpBackendStub = HttpClientZioBackend.stub
         .whenRequestMatchesPartial({
           case r if queriedDateIs(r.uri, requestedTime) =>
-            Response.ok(tablesAvailableNowJson(availableTables))
+            ResponseStub.adjust(tablesAvailableNowJson(availableTables))
 
-          case _ => Response.ok(noTablesAvailableJson)
+          case _ => ResponseStub.adjust(noTablesAvailableJson)
         })
 
       val restaurant = Restaurant(RestaurantId("123"), "Test Restaurant")
@@ -151,8 +151,8 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
     def collectToList: ZIO[Any, Throwable, List[A]] =
       stream.runCollect.map(_.toList)
 
-  private def withTableOnlineService[R, E, A](sttpBackend: SttpBackend[Task, Any])(
-      f: TableService => ZIO[R & SttpBackend[Task, Any], E, A]
+  private def withTableOnlineService[R, E, A](sttpBackend: Backend[Task])(
+      f: TableService => ZIO[R & Backend[Task], E, A]
   ): ZIO[R, E, A] =
     ZIO
       .serviceWithZIO[TableService](f)

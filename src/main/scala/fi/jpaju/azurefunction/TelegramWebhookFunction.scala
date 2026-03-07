@@ -6,7 +6,7 @@ import com.microsoft.azure.functions.annotation.*
 import fi.jpaju.stalker.*
 import fi.jpaju.telegram.*
 import scala.jdk.CollectionConverters.*
-import sttp.client3.httpclient.zio.*
+import sttp.client4.httpclient.zio.*
 import zio.*
 
 class TelegramWebhookFunction:

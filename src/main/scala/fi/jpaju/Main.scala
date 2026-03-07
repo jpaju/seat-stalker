@@ -1,7 +1,7 @@
 package fi.jpaju
 
 import zio.*
-import sttp.client3.httpclient.zio.HttpClientZioBackend
+import sttp.client4.httpclient.zio.HttpClientZioBackend
 import fi.jpaju.stalker.*
 import fi.jpaju.restaurant.TableOnlineIntegration
 import fi.jpaju.telegram.*

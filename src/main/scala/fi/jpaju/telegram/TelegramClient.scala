@@ -1,7 +1,7 @@
 package fi.jpaju.telegram
 
-import sttp.client3.*
-import sttp.client3.ziojson.*
+import sttp.client4.*
+import sttp.client4.ziojson.*
 import zio.*
 import zio.json.*
 
@@ -12,7 +12,7 @@ trait TelegramClient:
   *
   * API docs: https://core.telegram.org/bots/api
   */
-class LiveTelegramClient(config: TelegramConfig, sttpBackend: SttpBackend[Task, Any]) extends TelegramClient:
+class LiveTelegramClient(config: TelegramConfig, sttpBackend: Backend[Task]) extends TelegramClient:
   import LiveTelegramClient.*
 
   // https://core.telegram.org/bots/api#sendmessage
@@ -26,8 +26,8 @@ class LiveTelegramClient(config: TelegramConfig, sttpBackend: SttpBackend[Task, 
       .get(url)
       .response(asEither(asJson[TelegramErrorResponse], ignore)) // 2xx response indicates successful delivery
 
-    val telegramApiResponse = sttpBackend
-      .send(request)
+    val telegramApiResponse = request
+      .send(sttpBackend)
       .mapError(t => MessageDeliveryError("Network failure", t)) // Throwable indicates network failure
       .map(_.body)
       .reject {
@@ -57,5 +57,5 @@ object LiveTelegramClient:
   val layer = ZLayer:
     for
       config      <- ZIO.config(TelegramConfig.config)
-      sttpBackend <- ZIO.service[SttpBackend[Task, Any]]
+      sttpBackend <- ZIO.service[Backend[Task]]
     yield LiveTelegramClient(config, sttpBackend)

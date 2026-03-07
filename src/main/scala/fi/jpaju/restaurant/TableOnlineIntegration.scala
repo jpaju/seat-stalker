@@ -1,7 +1,7 @@
 package fi.jpaju.restaurant
 
-import sttp.client3.*
-import sttp.client3.ziojson.*
+import sttp.client4.*
+import sttp.client4.ziojson.*
 import zio.*
 import zio.json.*
 import zio.prelude.Validation
@@ -13,7 +13,7 @@ import java.time.*
   *
   * API docs: http://gol-api-doc.s3-website-eu-west-1.amazonaws.com/#introduction
   */
-case class TableOnlineIntegration(sttpBackend: SttpBackend[Task, Any]) extends TableService:
+case class TableOnlineIntegration(sttpBackend: Backend[Task]) extends TableService:
   import TableOnlineIntegration.*
 
   override def checkAvailableTables(parameters: CheckTablesParameters): UStream[AvailableTable] =
@@ -41,11 +41,11 @@ case class TableOnlineIntegration(sttpBackend: SttpBackend[Task, Any]) extends T
     val request      = basicRequest
       .get(url)
       .response(asJson[PeriodsResponse])
-      .responseGetRight
 
-    sttpBackend
-      .send(request)
+    request
+      .send(sttpBackend)
       .map(_.body)
+      .absolve
       .orDie
 
   private def toAvailableTables(periods: List[Period], dateTime: LocalDateTime): List[AvailableTable] =

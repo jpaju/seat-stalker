@@ -9,4 +9,4 @@ export zio.test.{Gen, check}
 export zio.test.Assertion.*
 export zio.test.TestAspect.*
 
-export sttp.client3.httpclient.zio.HttpClientZioBackend
+export sttp.client4.httpclient.zio.HttpClientZioBackend

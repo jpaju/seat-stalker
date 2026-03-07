@@ -1,8 +1,8 @@
 package fi.jpaju
 package telegram
 
-import sttp.client3.*
-import sttp.client3.testing.*
+import sttp.client4.*
+import sttp.client4.testing.*
 import sttp.model.*
 import zio.*
 import zio.test.*
@@ -13,12 +13,12 @@ object TelegramClientSpec extends ZIOSpecDefault:
       check(Gens.telegramConfig, Gens.telegramMessageBody) { (telegramConfig, messageBody) =>
         val chatId = telegramConfig.chatId
 
-        val recordingBackend = new RecordingSttpBackend(
+        val recordingBackend = RecordingBackend(
           HttpClientZioBackend.stub.whenAnyRequest
-            .thenRespond(responseJsonBody(chatId))
+            .thenRespondAdjust(responseJsonBody(chatId))
         )
 
-        def assertCorrectRequest(request: Request[?, ?]): TestResult =
+        def assertCorrectRequest(request: GenericRequest[?, ?]): TestResult =
           val uri                 = request.uri
           val expectedQueryParams = Map[String, String](
             "chat_id" -> chatId,
@@ -39,7 +39,7 @@ object TelegramClientSpec extends ZIOSpecDefault:
       }
     },
     test("when sending message with bad telegram API token, then should fail") {
-      val badTokenResponse = Response(
+      val badTokenResponse = ResponseStub.adjust(
         s"""
         {
             "ok": false,
@@ -61,7 +61,7 @@ object TelegramClientSpec extends ZIOSpecDefault:
       }
     },
     test("when sending message with invalid chat id, then should fail") {
-      val chatNotFoundResponse = Response(
+      val chatNotFoundResponse = ResponseStub.adjust(
         s"""
         {
             "ok": false,
@@ -107,7 +107,7 @@ object TelegramClientSpec extends ZIOSpecDefault:
     }
   """
 
-  private def withTelegramClient[R, E, A](config: TelegramConfig, sttpBackend: SttpBackend[Task, Any])(
+  private def withTelegramClient[R, E, A](config: TelegramConfig, sttpBackend: Backend[Task])(
       f: TelegramClient => ZIO[R, E, A]
   ): ZIO[R, E, A] =
     val hardcodedConfig = Map(

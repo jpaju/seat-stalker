@@ -58,10 +58,10 @@ ThisBuild / wartremoverExcluded ++= Seq(
 val zioVersion         = "2.1.24"
 val zioConfigVersion   = "4.0.6"
 val zioLoggingVersion  = "2.5.3"
-val zioJsonVersion     = "0.7.45"
+val zioJsonVersion     = "0.9.0"
 val zioPreludeversion  = "1.0.0-RC46"
 val telegramiumVersion = "10.904.0"
-val sttpVersion        = "3.11.0"
+val sttpVersion        = "4.0.19"
 val azFunctionVersion  = "3.2.4"
 
 // ===========================================================================================
@@ -78,9 +78,9 @@ lazy val root = (project in file("."))
       "dev.zio"                       %% "zio-config"                   % zioConfigVersion,
       "dev.zio"                       %% "zio-config-magnolia"          % zioConfigVersion,
       "io.github.apimorphism"         %% "telegramium-core"             % telegramiumVersion,
-      "com.softwaremill.sttp.client3" %% "core"                         % sttpVersion,
-      "com.softwaremill.sttp.client3" %% "zio"                          % sttpVersion,
-      "com.softwaremill.sttp.client3" %% "zio-json"                     % sttpVersion,
+      "com.softwaremill.sttp.client4" %% "core"                         % sttpVersion,
+      "com.softwaremill.sttp.client4" %% "zio"                          % sttpVersion,
+      "com.softwaremill.sttp.client4" %% "zio-json"                     % sttpVersion,
       "com.microsoft.azure.functions"  % "azure-functions-java-library" % azFunctionVersion
     ),
     libraryDependencies ++= zioTestDependencies

@@ -6,7 +6,7 @@ import com.microsoft.azure.functions.annotation.TimerTrigger
 import fi.jpaju.restaurant.*
 import fi.jpaju.stalker.*
 import fi.jpaju.telegram.*
-import sttp.client3.httpclient.zio.*
+import sttp.client4.httpclient.zio.*
 import zio.*
 
 class SeatStalkerTimerFunction:
