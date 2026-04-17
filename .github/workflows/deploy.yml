@@ -47,7 +47,7 @@ jobs:
           TF_VAR_email_alert_recipient: ${{ secrets.EMAIL_ALERT_RECIPIENT }}
 
       - name: Post Terraform Plan Comment
-        uses: borchero/terraform-plan-comment@v2
+        uses: borchero/terraform-plan-comment@v3
         with:
           token: ${{ github.token }}
           planfile: tfplan
