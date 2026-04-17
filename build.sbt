@@ -61,7 +61,7 @@ val zioLoggingVersion  = "2.5.3"
 val zioJsonVersion     = "0.9.0"
 val zioPreludeversion  = "1.0.0-RC46"
 val telegramiumVersion = "10.904.0"
-val sttpVersion        = "4.0.19"
+val sttpVersion        = "4.0.22"
 val azFunctionVersion  = "3.2.4"
 
 // ===========================================================================================
