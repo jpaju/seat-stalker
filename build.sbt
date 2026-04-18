@@ -56,7 +56,7 @@ ThisBuild / wartremoverExcluded ++= Seq(
 // ===========================================================================================
 
 val zioVersion         = "2.1.25"
-val zioConfigVersion   = "4.0.6"
+val zioConfigVersion   = "4.0.7"
 val zioLoggingVersion  = "2.5.3"
 val zioJsonVersion     = "0.9.1"
 val zioPreludeversion  = "1.0.0-RC47"
