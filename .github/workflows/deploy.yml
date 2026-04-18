@@ -21,6 +21,7 @@ jobs:
     concurrency:
       group: terraform-state-access
       cancel-in-progress: false
+      queue: max
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -88,6 +89,7 @@ jobs:
     concurrency:
       group: terraform-state-access
       cancel-in-progress: false
+      queue: max
     outputs:
       resource_group_name: ${{ steps.tf_outputs.outputs.resource_group_name }}
       function_app_name: ${{ steps.tf_outputs.outputs.function_app_name }}
@@ -132,6 +134,7 @@ jobs:
     concurrency:
       group: application-deployment
       cancel-in-progress: false
+      queue: max
     steps:
       - name: Checkout
         uses: actions/checkout@v6
