@@ -62,7 +62,7 @@ val zioJsonVersion     = "0.9.2"
 val zioPreludeversion  = "1.0.0-RC47"
 val telegramiumVersion = "10.906.0"
 val sttpVersion        = "4.0.23"
-val azFunctionVersion  = "3.2.4"
+val azFunctionVersion  = "3.3.0"
 
 // ===========================================================================================
 // PROJECT CONFIGURATION
