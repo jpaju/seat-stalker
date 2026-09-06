@@ -19,8 +19,7 @@
           name = "scala";
           packages = with pkgs; [
             sbt
-            scala-cli
-            temurin-bin-21
+            temurin-bin-25
             azure-functions-core-tools
           ];
 

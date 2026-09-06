@@ -76,7 +76,7 @@ resource "azurerm_function_app_flex_consumption" "az_function_app" {
   client_certificate_mode = "Required"
 
   runtime_name    = "java"
-  runtime_version = "21"
+  runtime_version = "25"
 
   app_settings = {
     "WEBSITE_MOUNT_ENABLED" = "1"
