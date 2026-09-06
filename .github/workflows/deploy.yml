@@ -18,6 +18,8 @@ jobs:
   terraform-plan:
     needs: [terraform-ci, scala-ci]
     runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.plan.outputs.has_changes }}
     concurrency:
       group: terraform-state-access
       cancel-in-progress: false
@@ -39,8 +41,19 @@ jobs:
         run: nix develop .#infrastructure --command terraform init -input=false
 
       - name: Terraform Plan
+        id: plan
         working-directory: ./infrastructure
-        run: nix develop .#infrastructure --command terraform plan -out=tfplan -input=false
+        run: |
+          set +e
+          nix develop .#infrastructure --command terraform plan -out=tfplan -input=false -detailed-exitcode
+          exit_code=$?
+          set -e
+
+          case "$exit_code" in
+            0) echo "has_changes=false" >> "$GITHUB_OUTPUT" ;;
+            2) echo "has_changes=true" >> "$GITHUB_OUTPUT" ;;
+            *) exit "$exit_code" ;;
+          esac
         env:
           TF_VAR_telegram_chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
           TF_VAR_telegram_bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -118,6 +131,7 @@ jobs:
         run: nix develop .#infrastructure --command terraform init -input=false
 
       - name: Terraform Apply
+        if: needs.terraform-plan.outputs.has_changes == 'true'
         working-directory: ./infrastructure
         run: nix develop .#infrastructure --command terraform apply -input=false tfplan
 
