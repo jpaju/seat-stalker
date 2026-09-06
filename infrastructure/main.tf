@@ -115,10 +115,10 @@ resource "azurerm_application_insights" "az_application_insights" {
   workspace_id        = azurerm_log_analytics_workspace.az_loganalytics.id
   application_type    = "web"
 
-  sampling_percentage                  = 0
+  sampling_percentage                  = 100
   daily_data_cap_in_gb                 = 1
   daily_data_cap_notifications_enabled = true
-  internet_ingestion_enabled           = false
+  internet_ingestion_enabled           = true
 }
 
 
