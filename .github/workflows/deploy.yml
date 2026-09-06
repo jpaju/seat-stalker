@@ -24,7 +24,7 @@ jobs:
       queue: max
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Nix
         uses: jpaju/gh-commons/actions/setup-nix@main
@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Nix
         uses: jpaju/gh-commons/actions/setup-nix@main
@@ -95,7 +95,7 @@ jobs:
       function_app_name: ${{ steps.tf_outputs.outputs.function_app_name }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Nix
         uses: jpaju/gh-commons/actions/setup-nix@main
@@ -137,7 +137,7 @@ jobs:
       queue: max
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Nix
         uses: jpaju/gh-commons/actions/setup-nix@main
