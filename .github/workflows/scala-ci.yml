@@ -29,7 +29,7 @@ jobs:
         uses: jpaju/gh-commons/actions/setup-nix@main
 
       - name: Check code formatting
-        run: nix develop --command sbt scalafmtCheckAll scalafmtSbtCheck
+        run: nix develop --command sbt "scalafmtCheckAll; scalafmtSbtCheck"
 
   unit-test:
     runs-on: ubuntu-latest
@@ -41,7 +41,7 @@ jobs:
         uses: jpaju/gh-commons/actions/setup-nix@main
 
       - name: Run unit tests
-        run: nix develop --command sbt test
+        run: nix develop --command sbt testFull
 
   integration-test:
     runs-on: ubuntu-latest
@@ -53,4 +53,4 @@ jobs:
         uses: jpaju/gh-commons/actions/setup-nix@main
 
       - name: Run integration tests
-        run: nix develop --command sbt integration/test
+        run: nix develop --command sbt integration/testFull

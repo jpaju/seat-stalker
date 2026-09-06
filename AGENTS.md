@@ -101,8 +101,8 @@ Apply these principles during refactoring phase:
 
 After making any code changes, you MUST verify everything works by running these commands:
 
-1. `sbt scalafmtAll scalafmtSbt` - Format code
-2. `sbt test integration/test` - Run all tests to ensure nothing is broken
+1. `sbt "scalafmtAll; scalafmtSbt"` - Format code
+2. `sbt "testFull; integration/testFull"` - Run all tests to ensure nothing is broken
 
 **IMPORTANT**: This verification step is required for ALL Scala/SBT changes, regardless of whether you used TDD or just restructured files/folders.
 
@@ -111,11 +111,13 @@ After making any code changes, you MUST verify everything works by running these
 **Prefer Metals MCP server tools when available** (look for `mcp__seat-stalker-metals__*` commands), otherwise use these sbt commands:
 
 - `sbt compile` - Compile the project
-- `sbt Test/compile integration/Test/compile` - Compile tests
-- `sbt test` - Run unit tests
-- `sbt integration/test` - Run integration tests
+- `sbt "Test/compile; integration/Test/compile"` - Compile tests
+- `sbt test` - Run changed unit tests
+- `sbt testFull` - Run all unit tests
+- `sbt integration/test` - Run changed integration tests
+- `sbt integration/testFull` - Run all integration tests
 - `sbt testOnly <TestClassName>` - Run specific test class
 - `sbt testOnly *<TestPattern>*` - Run tests matching pattern
-- `sbt scalafmtCheckAll scalafmtSbtCheck` - Check code formatting
-- `sbt scalafmtAll scalafmtSbt` - Apply code formatting
+- `sbt "scalafmtCheckAll; scalafmtSbtCheck"` - Check code formatting
+- `sbt "scalafmtAll; scalafmtSbt"` - Apply code formatting
 - `sbt assembly` - Create deployable JAR at `azure-functions/seat-stalker.jar`

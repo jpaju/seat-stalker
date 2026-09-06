@@ -1,15 +1,15 @@
 Global / onChangedBuildSource := ReloadOnSourceChanges
 watchBeforeCommand            := Watch.clearScreen
 
-name    := "seat-stalker"
-version := "0.1.0-SNAPSHOT"
+LocalRootProject / name    := "seat-stalker"
+LocalRootProject / version := "0.1.0-SNAPSHOT"
 
 // ===========================================================================================
 // COMPILER CONFIGURATION
 // ===========================================================================================
 
-ThisBuild / scalaVersion := "3.9.0"
-ThisBuild / scalacOptions ++= Seq(
+scalaVersion := "3.9.0"
+scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-explain",
@@ -24,7 +24,7 @@ ThisBuild / scalacOptions ++= Seq(
 // ===========================================================================================
 
 // Report all warnings as errors only on compile, not in e.g REPL or tests
-ThisBuild / scalacOptions ++= Seq(
+scalacOptions ++= Seq(
   "-Wvalue-discard",           // Warn when function evaluates to value that is discarded (because return type is Unit)
   "-Wnonunit-statement",       // Warn when non-Unit expression is in statement position
   "-Wunused:all",              // Warn on unused imports, params, privates, locals, etc
@@ -33,7 +33,7 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 // List of all warts: https://www.wartremover.org/doc/warts.html
-ThisBuild / wartremoverWarnings ++= Warts.allBut(
+wartremoverWarnings ++= Warts.allBut(
   Wart.Any,
   Wart.Equals,
   Wart.ImplicitConversion,
@@ -46,10 +46,7 @@ ThisBuild / wartremoverWarnings ++= Warts.allBut(
 )
 
 // Disable wartremover for tests
-ThisBuild / wartremoverExcluded ++= Seq(
-  baseDirectory.value,
-  (integration / baseDirectory).value
-).map(_ / "src" / "test")
+wartremoverExcluded += baseDirectory.value / "src" / "test"
 
 // ===========================================================================================
 // DEPENDENCY VERSIONS
@@ -103,8 +100,8 @@ lazy val zioTestDependencies = Seq(
 // PACKAGING/DEPLOYMENT CONFIGURATION
 // ===========================================================================================
 
-assembly / assemblyOutputPath    := baseDirectory.value / "azure-functions" / "seat-stalker.jar"
-assembly / assemblyMergeStrategy := {
+LocalRootProject / assembly / assemblyOutputPath    := baseDirectory.value / "azure-functions" / "seat-stalker.jar"
+LocalRootProject / assembly / assemblyMergeStrategy := {
   case x if x.contains("io.netty.versions.properties") => MergeStrategy.discard
   case x                                               =>
     val oldStrategy = (assembly / assemblyMergeStrategy).value
