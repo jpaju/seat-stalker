@@ -88,3 +88,24 @@ The application infrastructure is managed with Terraform and applied as part of 
    - `TELEGRAM_BOT_TOKEN` - Your Telegram bot token
    - `TELEGRAM_SECRET_TOKEN` - Your Telegram secret token
    - `EMAIL_ALERT_RECIPIENT` - Email for Azure alerts
+
+### Rotating Azure credentials
+
+Client secret values cannot be retrieved after creation, and their expiration cannot be extended. Create a new secret for the existing service principal without changing its RBAC assignments.
+
+Create a secret and format the output for the `AZURE_CREDENTIALS` GitHub Actions secret:
+
+```fish
+set CLIENT_ID (az ad sp list --display-name "seat-stalker-github" --query "[].{clientId:appId}" --output tsv)
+set SUBSCRIPTION_ID (az account show --query id --output tsv)
+
+az ad sp credential reset \
+  --id "$CLIENT_ID" \
+  --append \
+  --display-name "seat-stalker-github-actions" \
+  --years 2 \
+  --query "{clientId:appId,clientSecret:password,subscriptionId:'$SUBSCRIPTION_ID',tenantId:tenant}" \
+  --output json
+```
+
+Replace the repository's `AZURE_CREDENTIALS` secret with the complete JSON output.
