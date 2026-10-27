@@ -31,7 +31,10 @@
         devShells.infrastructure = pkgs.mkShell {
           name = "infrastructure";
           packages = with pkgs; [
-            azure-cli
+            (azure-cli.withExtensions [
+              azure-cli-extensions.log-analytics
+              azure-cli-extensions.application-insights
+            ])
             terraform
             tfsec
           ];
