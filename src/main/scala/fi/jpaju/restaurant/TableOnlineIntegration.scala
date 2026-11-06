@@ -4,10 +4,12 @@ import sttp.client4.*
 import sttp.client4.ziojson.*
 import zio.*
 import zio.json.*
-import zio.prelude.Validation
 import zio.stream.*
 
 import java.time.*
+// TODO Remove API link as it's deprecated
+// TODO Extract base URL to variable
+// TODO Mention restaurant search endpoint: https://service.tableonline.fi/search?q=<search-term>
 
 /** Service for interacting with TableOnline API
   *
@@ -17,30 +19,28 @@ case class TableOnlineIntegration(sttpBackend: Backend[Task]) extends TableServi
   import TableOnlineIntegration.*
 
   override def checkAvailableTables(parameters: CheckTablesParameters): UStream[AvailableTable] =
-    val responseStream = ZStream.fromZIO(fetchPeriods(parameters))
+    ZStream.fromZIO(fetchAvailability(parameters)).flatMap {
+      case Nil =>
+        ZStream.fromZIO(fetchNextAvailableDate(parameters)).flatMap {
+          case Some(nextAvailableDate) =>
+            checkAvailableTables(parameters.copy(startingFrom = nextAvailableDate.atStartOfDay))
+          case None                    => ZStream.empty
+        }
 
-    responseStream.flatMap {
-      case PeriodsResponse(Nil, None) => ZStream.empty
-
-      case PeriodsResponse(Nil, Some(nextAvailableDate)) =>
-        val parametersWithNewDate = parameters.copy(startingFrom = nextAvailableDate.atStartOfDay)
-        checkAvailableTables(parametersWithNewDate)
-
-      case PeriodsResponse(periods, _) =>
-        val tables                = toAvailableTables(periods, parameters.startingFrom)
-        val nextday               = parameters.startingFrom.plusDays(1)
-        val parametersWithNextDay = parameters.copy(startingFrom = nextday)
-        ZStream.fromIterable(tables) ++ checkAvailableTables(parametersWithNextDay)
+      case slots =>
+        val tables                 = toAvailableTables(slots, parameters)
+        val parametersWithNextDate = parameters.copy(startingFrom = parameters.startingFrom.plusDays(1))
+        ZStream.fromIterable(tables) ++ checkAvailableTables(parametersWithNextDate)
     }
 
-  private def fetchPeriods(parameters: CheckTablesParameters): UIO[PeriodsResponse] =
+  private def fetchAvailability(parameters: CheckTablesParameters): UIO[List[AvailabilitySlot]] =
     val date         = parameters.startingFrom.toLocalDate
     val queryParams  = Map("persons" -> parameters.persons, "date" -> date.toString)
     val restaurantId = parameters.restaurant.id
-    val url          = uri"https://service.tableonline.fi/public/r/$restaurantId/periods?$queryParams"
+    val url          = uri"https://api.tableonline.com/restaurant/$restaurantId/availability?$queryParams"
     val request      = basicRequest
       .get(url)
-      .response(asJson[PeriodsResponse])
+      .response(asJson[List[AvailabilitySlot]])
 
     request
       .send(sttpBackend)
@@ -48,34 +48,51 @@ case class TableOnlineIntegration(sttpBackend: Backend[Task]) extends TableServi
       .absolve
       .orDie
 
-  private def toAvailableTables(periods: List[Period], dateTime: LocalDateTime): List[AvailableTable] =
-    val minTime = dateTime.toLocalTime
-    val date    = dateTime.toLocalDate
+  private def fetchNextAvailableDate(parameters: CheckTablesParameters): UIO[Option[LocalDate]] =
+    val startDate    = parameters.startingFrom.toLocalDate.plusDays(1)
+    // A 90-day window covers TableOnline's booking horizon without a separate module metadata request.
+    val endDate      = startDate.plusDays(90)
+    val queryParams  = Map(
+      "start_date" -> startDate.toString,
+      "end_date"   -> endDate.toString,
+      "persons"    -> parameters.persons
+    )
+    val restaurantId = parameters.restaurant.id
+    val url          = uri"https://api.tableonline.com/restaurant/$restaurantId/availability/calendar?$queryParams"
+    val request      = basicRequest
+      .get(url)
+      .response(asJson[List[CalendarDate]])
 
-    import math.Ordered.orderingToOrdered
-    given Ordering[LocalTime] = Ordering.by(_.toSecondOfDay)
+    request
+      .send(sttpBackend)
+      .map(_.body)
+      .absolve
+      .orDie
+      .map(
+        _.find(calendarDate =>
+          !calendarDate.date.isBefore(startDate) && calendarDate.persons
+            .get(parameters.persons.toString)
+            .exists(_.availableTimes > 0)
+        ).map(_.date)
+      )
 
-    periods
-      .flatMap { period =>
-        period.hours
-          .filter(_.time >= minTime)
-          .map { hour =>
-            PersonCount.make(period.persons).map(AvailableTable(hour.time.atDate(date), _))
-          }
-      }
-      .collect { case Validation.Success(_, tables) => tables }
+  private def toAvailableTables(
+      slots: List[AvailabilitySlot],
+      parameters: CheckTablesParameters
+  ): List[AvailableTable] =
+    val minTime = parameters.startingFrom
+
+    slots
+      .filter(!_.time.isBefore(minTime))
+      .map(slot => AvailableTable(slot.time, parameters.persons))
 
 object TableOnlineIntegration:
-  private case class PeriodsResponse(
-      periods: List[Period],
-      @jsonField("next_available_date") nextAvailableDate: Option[LocalDate]
-  )
+  private case class AvailabilitySlot(time: LocalDateTime)
+  private case class CalendarAvailability(@jsonField("available_times") availableTimes: Int)
+  private case class CalendarDate(date: LocalDate, persons: Map[String, CalendarAvailability])
 
-  private case class Period(persons: Int, hours: List[Hour])
-  private case class Hour(time: LocalTime)
-
-  private given JsonDecoder[Hour]            = DeriveJsonDecoder.gen[Hour]
-  private given JsonDecoder[Period]          = DeriveJsonDecoder.gen[Period]
-  private given JsonDecoder[PeriodsResponse] = DeriveJsonDecoder.gen[PeriodsResponse]
+  private given JsonDecoder[AvailabilitySlot]     = DeriveJsonDecoder.gen[AvailabilitySlot]
+  private given JsonDecoder[CalendarAvailability] = DeriveJsonDecoder.gen[CalendarAvailability]
+  private given JsonDecoder[CalendarDate]         = DeriveJsonDecoder.gen[CalendarDate]
 
   val layer = ZLayer.fromFunction(TableOnlineIntegration.apply)
