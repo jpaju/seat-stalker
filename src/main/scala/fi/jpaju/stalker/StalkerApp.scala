@@ -44,8 +44,8 @@ object LiveStalkerApp:
 
 object StalkerApp:
   // Hard code desired restaurants for now
-  val kaskis    = Restaurant(RestaurantId("291"), "Kaskis")
-  val metsämäki = Restaurant(RestaurantId("1286"), "Ravintola Metsämäki")
+  val kaskis    = Restaurant(RestaurantId("res_0VWRHIH732hmN9"), "Kaskis")
+  val metsämäki = Restaurant(RestaurantId("res_0VOr6BDrn6Mw8q"), "Ravintola Metsämäki")
 
   val jobs = Set(
     StalkerJobDefinition(kaskis, PersonCount(2)),
