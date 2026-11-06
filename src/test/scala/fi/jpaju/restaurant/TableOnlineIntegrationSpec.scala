@@ -139,6 +139,31 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
         for result <- service.checkAvailableTables(parameters).collectToList
         yield assertTrue(result == expectedResult)
       }
+    },
+    test("exclude slots that are only available through a waitlist") {
+      val date          = defaultParameters.startingFrom.toLocalDate
+      val waitlistTime  = LocalTime.parse("12:00:00")
+      val availableTime = LocalTime.parse("13:00:00")
+
+      val sttpBackendStub = HttpClientZioBackend.stub
+        .whenRequestMatchesPartial({
+          case r if queriedDateIs(r.uri, date) =>
+            ResponseStub.adjust(
+              tablesAvailableJsonWithWaitlist(
+                date,
+                List(waitlistTime -> true, availableTime -> false)
+              )
+            )
+
+          case _ => ResponseStub.adjust(noTablesAvailableJson)
+        })
+
+      withTableOnlineService(sttpBackendStub) { service =>
+        val expectedResult = List(AvailableTable(availableTime.atDate(date), defaultParameters.persons))
+
+        for result <- service.checkAvailableTables(defaultParameters).collectToList
+        yield assertTrue(result == expectedResult)
+      }
     }
   )
 
@@ -171,14 +196,20 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
   // ============================================ Response JSON ============================================
 
   private def tablesAvailableJson(date: LocalDate, times: List[LocalTime]): String =
+    tablesAvailableJsonWithWaitlist(date, times.map(_ -> false))
+
+  private def tablesAvailableJsonWithWaitlist(
+      date: LocalDate,
+      times: List[(LocalTime, Boolean)]
+  ): String =
     times
-      .map(time => s"""
+      .map((time, waitlistOnly) => s"""
         {
           "time": "${date}T$time",
           "tables": [
             {
               "request_only": false,
-              "waitlist_only": false
+              "waitlist_only": $waitlistOnly
             }
           ]
         }

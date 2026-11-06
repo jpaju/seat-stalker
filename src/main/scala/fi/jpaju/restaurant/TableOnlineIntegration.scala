@@ -19,7 +19,7 @@ case class TableOnlineIntegration(sttpBackend: Backend[Task]) extends TableServi
   import TableOnlineIntegration.*
 
   override def checkAvailableTables(parameters: CheckTablesParameters): UStream[AvailableTable] =
-    ZStream.fromZIO(fetchAvailability(parameters)).flatMap {
+    ZStream.fromZIO(fetchAvailability(parameters).map(_.filter(_.isAvailableWithoutWaitlist))).flatMap {
       case Nil =>
         ZStream.fromZIO(fetchNextAvailableDate(parameters)).flatMap {
           case Some(nextAvailableDate) =>
@@ -87,10 +87,14 @@ case class TableOnlineIntegration(sttpBackend: Backend[Task]) extends TableServi
       .map(slot => AvailableTable(slot.time, parameters.persons))
 
 object TableOnlineIntegration:
-  private case class AvailabilitySlot(time: LocalDateTime)
+  private case class AvailabilityTable(@jsonField("waitlist_only") waitlistOnly: Boolean)
+  private case class AvailabilitySlot(time: LocalDateTime, tables: List[AvailabilityTable]):
+    def isAvailableWithoutWaitlist: Boolean = tables.exists(!_.waitlistOnly)
+
   private case class CalendarAvailability(@jsonField("available_times") availableTimes: Int)
   private case class CalendarDate(date: LocalDate, persons: Map[String, CalendarAvailability])
 
+  private given JsonDecoder[AvailabilityTable]    = DeriveJsonDecoder.gen[AvailabilityTable]
   private given JsonDecoder[AvailabilitySlot]     = DeriveJsonDecoder.gen[AvailabilitySlot]
   private given JsonDecoder[CalendarAvailability] = DeriveJsonDecoder.gen[CalendarAvailability]
   private given JsonDecoder[CalendarDate]         = DeriveJsonDecoder.gen[CalendarDate]
