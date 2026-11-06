@@ -34,12 +34,12 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
           _      <- service.checkAvailableTables(parameters).runDrain
           request = recordingBackend.allInteractions.head._1
           uri     = request.uri
-        yield assert(uri.host)(equalTo(Some("service.tableonline.fi"))) &&
-          assert(uri.path)(equalTo(List("public", "r", parameters.restaurant.id, "periods"))) &&
+        yield assert(uri.host)(equalTo(Some("api.tableonline.com"))) &&
+          assert(uri.path)(equalTo(List("restaurant", parameters.restaurant.id, "availability"))) &&
           assert(uri.paramsMap)(equalTo(expectedQueryParams))
       }
     },
-    test("when next_available_date is null, then returns emppty stream") {
+    test("when response is empty, then returns empty stream") {
       val sttpBackendStub = HttpClientZioBackend.stub.whenAnyRequest
         .thenRespondAdjust(noTablesAvailableJson)
 
@@ -49,24 +49,24 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       }
     },
     test("when tables available for requested date, then they are returned") {
-      val responseData = List(
-        (PersonCount(2), LocalTime.parse("12:00:00")),
-        (PersonCount(34), LocalTime.parse("21:30:00")),
-        (PersonCount(12), LocalTime.parse("13:18:00"))
+      val availableTimes = List(
+        LocalTime.parse("12:00:00"),
+        LocalTime.parse("21:30:00"),
+        LocalTime.parse("13:18:00")
       )
 
       val sttpBackendStub = HttpClientZioBackend.stub
         .whenRequestMatchesPartial({
           case r if queriedDateIs(r.uri, defaultParameters.startingFrom) =>
-            ResponseStub.adjust(tablesAvailableNowJson(responseData))
+            ResponseStub.adjust(tablesAvailableJson(defaultParameters.startingFrom.toLocalDate, availableTimes))
 
           case _ => ResponseStub.adjust(noTablesAvailableJson)
         })
 
       withTableOnlineService(sttpBackendStub) { service =>
         val date           = defaultParameters.startingFrom.toLocalDate
-        val expectedResult = responseData.map { (personCount, time) =>
-          AvailableTable(time.atDate(date), personCount)
+        val expectedResult = availableTimes.map { time =>
+          AvailableTable(time.atDate(date), defaultParameters.persons)
         }
 
         for result <- service.checkAvailableTables(defaultParameters).runCollect.map(_.toList)
@@ -79,22 +79,25 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       val restaurant = Restaurant(RestaurantId("123"), "Test Restaurant")
       val parameters = CheckTablesParameters(restaurant, PersonCount(2), now)
 
-      val nextAvailableTables = List(PersonCount(2) -> LocalTime.parse("12:00:00"))
+      val nextAvailableTimes = List(LocalTime.parse("12:00:00"))
 
       val sttpBackendStub = HttpClientZioBackend.stub
         .whenRequestMatchesPartial({
           case r if queriedDateIs(r.uri, now) =>
+            ResponseStub.adjust(noTablesAvailableJson)
+
+          case r if r.uri.path.endsWith(List("availability", "calendar")) =>
             ResponseStub.adjust(tablesAvailableLaterJson(later))
 
           case r if queriedDateIs(r.uri, later) =>
-            ResponseStub.adjust(tablesAvailableNowJson(nextAvailableTables))
+            ResponseStub.adjust(tablesAvailableJson(later, nextAvailableTimes))
 
           case _ => ResponseStub.adjust(noTablesAvailableJson)
         })
 
       withTableOnlineService(sttpBackendStub) { service =>
-        val expectedResult = nextAvailableTables.map { (personCount, time) =>
-          AvailableTable(time.atDate(later), personCount)
+        val expectedResult = nextAvailableTimes.map { time =>
+          AvailableTable(time.atDate(later), parameters.persons)
         }
 
         for result <- service.checkAvailableTables(parameters).collectToList
@@ -110,16 +113,16 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
       val beforeRequestedTime = LocalDateTime.parse("2023-01-03T15:00:00")
       val afterRequestedTime  = LocalDateTime.parse("2023-01-03T21:00:00")
 
-      val availableTables = List(
-        PersonCount(2) -> beforeRequestedTime.toLocalTime,
-        PersonCount(3) -> requestedTime.toLocalTime,
-        PersonCount(4) -> afterRequestedTime.toLocalTime
+      val availableTimes = List(
+        beforeRequestedTime.toLocalTime,
+        requestedTime.toLocalTime,
+        afterRequestedTime.toLocalTime
       )
 
       val sttpBackendStub = HttpClientZioBackend.stub
         .whenRequestMatchesPartial({
           case r if queriedDateIs(r.uri, requestedTime) =>
-            ResponseStub.adjust(tablesAvailableNowJson(availableTables))
+            ResponseStub.adjust(tablesAvailableJson(requestedTime.toLocalDate, availableTimes))
 
           case _ => ResponseStub.adjust(noTablesAvailableJson)
         })
@@ -129,8 +132,8 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
 
       withTableOnlineService(sttpBackendStub) { service =>
         val expectedResult = List(
-          AvailableTable(requestedTime, PersonCount(3)),
-          AvailableTable(afterRequestedTime, PersonCount(4))
+          AvailableTable(requestedTime, parameters.persons),
+          AvailableTable(afterRequestedTime, parameters.persons)
         )
 
         for result <- service.checkAvailableTables(parameters).collectToList
@@ -167,35 +170,33 @@ object TableOnlineServiceSpec extends ZIOSpecDefault:
 
   // ============================================ Response JSON ============================================
 
-  private def tablesAvailableNowJson(periods: List[(PersonCount, LocalTime)]): String =
-    def singlePeriodJson(persons: PersonCount, time: LocalTime): String = s"""
-      {
-          "period": "lunch",
-          "persons": $persons,
-          "hours": [
-              {
-                  "object": "hour",
-                  "time": "${time.toString}",
-                  "booking_state": "validated"
-              }
+  private def tablesAvailableJson(date: LocalDate, times: List[LocalTime]): String =
+    times
+      .map(time => s"""
+        {
+          "time": "${date}T$time",
+          "tables": [
+            {
+              "request_only": false,
+              "waitlist_only": false
+            }
           ]
-      }
-      """
-
-    s"""{ "periods": [ ${periods.map(singlePeriodJson).mkString(",")} ] }"""
-  end tablesAvailableNowJson
+        }
+      """)
+      .mkString("[", ",", "]")
 
   private def tablesAvailableLaterJson(later: LocalDate): String =
     s"""
-    {
-        "periods": [],
-        "next_available_date": "${later.toString}"
-    }
+    [
+      {
+        "date": "$later",
+        "persons": {
+          "2": {
+            "available_times": 1
+          }
+        }
+      }
+    ]
     """
 
-  private def noTablesAvailableJson: String = """
-    {
-        "periods": [],
-        "next_available_date": null
-    }
-    """
+  private val noTablesAvailableJson = "[]"
