@@ -52,7 +52,7 @@ wartremoverExcluded += baseDirectory.value / "src" / "test"
 // DEPENDENCY VERSIONS
 // ===========================================================================================
 
-val zioVersion         = "2.1.26"
+val zioVersion         = "2.1.27"
 val zioConfigVersion   = "4.0.8"
 val zioLoggingVersion  = "2.5.3"
 val zioJsonVersion     = "1.1.0"
