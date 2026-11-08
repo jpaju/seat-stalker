@@ -53,7 +53,7 @@ wartremoverExcluded += baseDirectory.value / "src" / "test"
 // ===========================================================================================
 
 val zioVersion         = "2.1.27"
-val zioConfigVersion   = "4.0.8"
+val zioConfigVersion   = "4.1.0"
 val zioLoggingVersion  = "2.5.3"
 val zioJsonVersion     = "1.1.2"
 val zioPreludeversion  = "1.0.0-RC48"
